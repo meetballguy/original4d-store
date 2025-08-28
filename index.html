@@ -8,7 +8,7 @@
   <meta name="description" content="Original4D situs resmi. Portal brand aman, cepat, dan mudah diakses. Klik tombol untuk login ke platform utama.">
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/png" href="/assets/img/favicon.png">
-  <link rel="canonical" href="https://original4d.store/">
+  <link rel="canonical" href="https://original4d.store/index.html">
   <link rel="amphtml" href="https://original4d.store/amp.index.html">
   <meta property="og:image:width" content="840" />
   <meta property="og:image:height" content="480" />
@@ -46,6 +46,8 @@
   <meta property="og:image" content="https://original4d.store/assets/img/hero.webp">
   <meta property="og:image:width" content="600">
   <meta property="og:image:height" content="350">
+  <meta name="google-site-verification" content="ccgLPQalcFCV6f1GcpIRVczeUZVGwwtxtedjY3t_n3c" />
+  <meta name="google-site-verification" content="vIeUF3izweyStzbaeoL8NNsLOY4kOPC3qSqNU45ITrY" />
 
 <!-- JSON-LD: Organization + WebSite + WebPage + FAQ (Graph) -->
 <script type="application/ld+json">
@@ -223,9 +225,8 @@
 
     /* Media card (ikuti rasio gambar 600x350 ≈ 12:7) */
     .media-card{padding:0;overflow:hidden}
-    .media{margin:0;/* <figure> default margin -> 0 */width:100%;display:block;aspect-ratio: var(--ratio, 12/7);/* 600:350 = 12:7 */}
-    .media picture{ display:block; width:100%; height:100%; }
-    .media img{display:block;width:100%;height:150%;object-fit:fill;object-position:center}
+    .media{width:100%;display:block;aspect-ratio: var(--ratio, 12/7)}
+    .media img{width:100%;height:auto;object-fit:contain;object-position:center;display:block}
     .fluid-img{width:100%;height:auto;display:block}
 
     h1{font-size:var(--fs-1);margin:0 0 8px;color:var(--brand)}
@@ -259,15 +260,13 @@
     footer{opacity:.92;text-align:center;padding:32px var(--space);font-size:var(--fs-3)}
 
     /* Large desktop polish */
-    @media (min-width:1500px){
+    @media (min-width:1200px){
       .card{padding:calc(var(--space) + 4px)}
       .btn{padding:14px 24px}
-      .brand{margin-left:15px}
-      .media img{height: 150%;}
     }
 
     /* ===== Responsive breakpoints ===== */
-    @media (max-width: 680px){
+    @media (max-width: 780px){
       :root{--space:16px;--space-lg:24px}
       .nav{padding:8px var(--space)}
       .actions .btn:not(.menu-toggle){display:none}
@@ -275,8 +274,6 @@
       .grid-2{grid-template-columns:1fr}
       .fixed-cta{display:block}
       .fixed-cta .btn{width:min(680px, calc(100% - 2*var(--gut)))}
-      .brand{margin-left:15px}
-      .media img{height: 100%;}
     }
 
     @media (max-width: 420px){
@@ -285,17 +282,13 @@
       .card{padding:12px}
       .fixed-cta{bottom:8px}
       .menu-toggle{padding:8px 14px}
-      .brand{margin-left:15px}
-      .media img{height: 100%;}
     }
 
     /* ===== Desktop polish & fixes ===== */
-    @media (min-width: 560px){
+    @media (min-width: 781px){
       .fixed-cta{display:none}
       .actions .menu-toggle{display:none}
       .hero{grid-template-columns:1fr 1fr}
-      .brand{margin-left:15px}
-      .media img{height: 100%;}
     }
   </style>
 </head>
@@ -423,6 +416,4 @@
 
 
 
-
-
-
+Ask ChatGPT
