@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://original4d.store/sitemap.xml
