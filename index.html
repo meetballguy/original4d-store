@@ -227,7 +227,7 @@
     .media-card{padding:0;overflow:hidden}
     .media{margin:0;width:100%;display:block;aspect-ratio: var(--ratio, 12/7)}
     .media picture{ display:block; width:100%; height:100%; }
-    .media img{width:100%;height:150%;object-fit:cover;object-position:center;display:block}
+    .media img{width:100%;height:120%%;object-fit:cover;object-position:center;display:block}
     .fluid-img{width:100%;height:auto;display:block}
 
     h1{font-size:var(--fs-1);margin:0 0 8px;color:var(--brand)}
@@ -264,10 +264,11 @@
     @media (min-width:1200px){
       .card{padding:calc(var(--space) + 4px)}
       .btn{padding:14px 24px}
+      .media img{width:100%;height:120%%;object-fit:cover;object-position:center;display:block}
     }
 
     /* ===== Responsive breakpoints ===== */
-    @media (max-width: 780px){
+    @media (max-width: 980px){
       :root{--space:16px;--space-lg:24px}
       .nav{padding:8px var(--space)}
       .actions .btn:not(.menu-toggle){display:none}
@@ -275,6 +276,7 @@
       .grid-2{grid-template-columns:1fr}
       .fixed-cta{display:block}
       .fixed-cta .btn{width:min(680px, calc(100% - 2*var(--gut)))}
+      .media img{width:100%;height:120%%;object-fit:cover;object-position:center;display:block}
     }
 
     @media (max-width: 420px){
@@ -283,6 +285,7 @@
       .card{padding:12px}
       .fixed-cta{bottom:8px}
       .menu-toggle{padding:8px 14px}
+      .media img{width:100%;height:120%%;object-fit:cover;object-position:center;display:block}
     }
 
     /* ===== Desktop polish & fixes ===== */
@@ -290,6 +293,7 @@
       .fixed-cta{display:none}
       .actions .menu-toggle{display:none}
       .hero{grid-template-columns:1fr 1fr}
+      .media img{width:100%;height:120%%;object-fit:cover;object-position:center;display:block}
     }
   </style>
 </head>
@@ -411,5 +415,6 @@
   </script>
 </body>
 </html>
+
 
 
