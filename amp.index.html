@@ -7,14 +7,19 @@
   <meta name="description" content="Original4D situs resmi. Portal brand aman, cepat, dan mudah diakses. Klik tombol untuk masuk ke platform utama.">
   <link rel="canonical" href="https://original4d.store/">
   <link rel="icon" type="image/png" href="/assets/img/favicon.png">
+
+  <!-- AMP core -->
   <script async src="https://cdn.ampproject.org/v0.js"></script>
-  <script async custom-element="amp-sidebar" src="https://cdn.ampproject.org/v0/amp-sidebar-0.1.js"></script>
   <script async custom-element="amp-accordion" src="https://cdn.ampproject.org/v0/amp-accordion-0.1.js"></script>
+
+  <!-- OG -->
   <meta property="og:title" content="Original4D - Situs Resmi dan Terpercaya Indonesia 2025">
   <meta property="og:description" content="Original4D situs resmi. Portal brand aman, cepat, dan mudah diakses. Klik tombol untuk masuk ke platform utama.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://original4d.store/">
   <meta property="og:image" content="https://original4d.store/assets/img/hero.webp">
+  <meta property="og:image:width" content="600">
+  <meta property="og:image:height" content="350">
 
   <!-- JSON-LD Graph: Organization + WebSite + WebPage + FAQ -->
   <script type="application/ld+json">
@@ -49,7 +54,11 @@
         "isPartOf": {"@id": "https://original4d.store/#website"},
         "about": {"@id": "https://original4d.store/#org"},
         "inLanguage": "id-ID",
-        "primaryImageOfPage": {"@type":"ImageObject","url":"https://original4d.store/assets/img/hero.webp","width":1200,"height":675},
+        "primaryImageOfPage": {
+          "@type":"ImageObject",
+          "url":"https://original4d.store/assets/img/hero.webp",
+          "width":600,"height":350
+        },
         "datePublished": "2025-08-29T00:00:00+07:00",
         "dateModified": "2025-08-29T00:00:00+07:00",
         "description": "Original4D situs resmi. Portal brand aman, cepat, dan mudah diakses. Klik tombol untuk masuk ke platform utama."
@@ -79,7 +88,7 @@
   </style>
   <noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 
-  <!-- AMP custom styles (<=75KB) -->
+  <!-- Styles -->
   <style amp-custom>
     :root{
       --brand:#ffd700; --bg1:#0b2a3a; --bg2:#108aa0; --text:#eef2f7;
@@ -115,35 +124,15 @@
       .hero{grid-template-columns:1fr 1fr}
       .grid-2{grid-template-columns:1fr 1fr}
     }
-    @media(max-width:780px){
-      .actions .btn:not(.menu){display:none}
-    }
     @media(max-width:420px){
       .btn{padding:10px 16px}
       .card{padding:12px}
     }
-
-    /* Sidebar */
-    #sidenav{background:#121212ee; backdrop-filter:blur(8px)}
-    .side-list{list-style:none; padding:0; margin:0}
-    .side-list li{margin:8px 0}
-    .side-list .btn{display:block; text-align:center}
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <amp-sidebar id="sidenav" layout="nodisplay" side="right">
-    <div class="container" style="padding:var(--space)">
-      <button class="btn" on="tap:sidenav.close">Tutup ✕</button>
-      <ul class="side-list" style="margin-top:var(--space)">
-        <li><a class="btn" href="https://baksooriginal4d.com/login" target="_blank" rel="noopener nofollow">Login</a></li>
-        <li><a class="btn" href="https://baksooriginal4d.com/register" target="_blank" rel="noopener nofollow">Daftar</a></li>
-      </ul>
-    </div>
-  </amp-sidebar>
-
-  <!-- Header -->
+  <!-- Header (tanpa burger menu) -->
   <header>
     <div class="container nav" aria-label="Navigasi utama">
       <div class="brand">
@@ -152,7 +141,6 @@
       <div class="actions">
         <a class="btn" href="https://baksooriginal4d.com/login" target="_blank" rel="noopener nofollow">Login</a>
         <a class="btn cta" href="https://baksooriginal4d.com" target="_blank" rel="noopener nofollow">Masuk</a>
-        <button class="btn menu" on="tap:sidenav.toggle">Menu</button>
       </div>
     </div>
   </header>
@@ -161,8 +149,15 @@
   <main>
     <section class="container hero">
       <div class="card" style="padding:0; overflow:hidden">
-        <amp-img src="/assets/img/hero.webp" alt="Original4D" width="1200" height="675" layout="responsive"></amp-img>
+        <!-- Hero sesuai aset 600x350 -->
+        <amp-img
+          src="/assets/img/hero.webp"
+          alt="Original4D - Situs Resmi dan Terpercaya Indonesia 2025"
+          width="600" height="350"
+          layout="responsive">
+        </amp-img>
       </div>
+
       <div class="card">
         <h1>Original4D - Situs Resmi & Terpercaya</h1>
         <p>Selamat datang di portal brand Original4D. Halaman ini dibuat ringan dan aman agar kamu mudah menemukan tautan resmi. Tekan tombol di bawah untuk menuju platform utama.</p>
@@ -197,7 +192,7 @@
         </section>
         <section>
           <h3 style="color:#111">Bagaimana cara login?</h3>
-          <p>Klik tombol Login di bagian atas atau tombol Masuk, lalu ikuti petunjuk di platform utama.</p>
+          <p>Klik tombol Masuk, lalu ikuti petunjuk di platform utama.</p>
         </section>
         <section>
           <h3 style="color:#111">Apa ciri tautan resmi Original4D?</h3>
