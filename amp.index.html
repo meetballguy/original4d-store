@@ -144,16 +144,18 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <amp-sidebar id="sidenav" layout="nodisplay" side="right">
-    <div class="container" style="padding:var(--space)">
-      <button class="btn" on="tap:sidenav.close">Tutup ✕</button>
-      <ul class="side-list" style="margin-top:var(--space)">
-        <li><a class="btn" href="https://baksooriginal4d.com/login" target="_blank" rel="noopener noreferrer">Login</a></li>
-        <li><a class="btn" href="https://baksooriginal4d.com/register" target="_blank" rel="noopener noreferrer">Daftar</a></li>
-      </ul>
-    </div>
-  </amp-sidebar>
+  <!-- Sidebar (AMP) -->
+    <amp-sidebar id="sidenav" layout="nodisplay" side="right" aria-label="Menu utama">
+      <div class="container" style="padding:var(--space)">
+        <button class="btn" on="tap:sidenav.close" aria-label="Tutup menu">Tutup ✕</button>
+        <nav aria-label="Navigasi sidebar">
+          <ul class="side-list" style="margin-top:var(--space)">
+            <li><a class="btn" href="https://baksooriginal4d.com/login" target="_blank" rel="noopener noreferrer">Login</a></li>
+            <li><a class="btn" href="https://baksooriginal4d.com/register" target="_blank" rel="noopener noreferrer">Daftar</a></li>
+          </ul>
+        </nav>
+      </div>
+    </amp-sidebar>
 
   <!-- Header -->
   <header>
@@ -221,6 +223,7 @@
   </footer>
 </body>
 </html>
+
 
 
 
