@@ -1,7 +1,7 @@
 # ===== Build: jalankan 2 skrip (sitemap + feed) =====
 [build]
   publish = "."
-  command = "node scripts/generate-sitemap.mjs && node scripts/generate-feed.mjs"
+  command = "node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -161,4 +161,5 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
 
