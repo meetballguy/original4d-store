@@ -1,23 +1,22 @@
 [build]
   publish = "."
-  command = ""   # situs statis, tidak butuh build
+  command = "node scripts/generate-sitemap.mjs"  # buat sitemap otomatis saat deploy
 
-# 1) Kanonikal: /index.html -> /
+# 1) Kanonik: /index.html -> /
 [[redirects]]
   from = "/index.html"
   to   = "/"
   status = 301
   force  = true
 
-# 2) Skema: http -> https (opsional tapi baik)
+# 2) http -> https
 [[redirects]]
   from = "http://original4d.store/*"
   to   = "https://original4d.store/:splat"
   status = 301
   force  = true
 
-# 3) www -> non-www (pakai conditions Host)
-#    (hapus rule lama yang memakai full URL di `from`)
+# 3) www -> non-www (host condition)
 [[redirects]]
   from = "/*"
   to   = "https://original4d.store/:splat"
@@ -25,13 +24,14 @@
   force  = true
   conditions = { Host = ["www.original4d.store"] }
 
+# 4) /blog/index.html -> /blog/
 [[redirects]]
   from = "/blog/index.html"
   to   = "/blog/"
   status = 301
   force  = true
 
-# ===== Headers Global (non-AMP & default) =====
+# ===== Headers Global =====
 [[headers]]
   for = "/*"
   [headers.values]
@@ -40,16 +40,13 @@
     X-Frame-Options           = "SAMEORIGIN"
     Referrer-Policy           = "strict-origin-when-cross-origin"
     Permissions-Policy        = "geolocation=(), microphone=(), camera=(), browsing-topics=()"
-    # CSP global: izinkan inline script (index.html pakai inline JS), TIDAK izinkan script eksternal
     Content-Security-Policy   = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'"
 
-# ===== CSP override khusus halaman AMP =====
+# ===== CSP khusus AMP =====
 [[headers]]
   for = "/amp.index.html"
   [headers.values]
-    # AMP butuh runtime dari cdn.ampproject.org
     Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; script-src 'self' https://cdn.ampproject.org; script-src-elem 'self' https://cdn.ampproject.org; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https://*.ampproject.org; frame-src https://*.youtube.com https://*.google.com"
-    # (opsional) bantu perf
     Link = "<https://cdn.ampproject.org>; rel=preconnect; crossorigin"
 
 # ===== Cache policy =====
@@ -58,37 +55,6 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-[[headers]]
-  for = "/index.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/amp.index.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-# ===== Headers khusus: SITEMAP & ROBOTS =====
-[[headers]]
-  for = "/sitemap.xml"
-  [headers.values]
-    Content-Type  = "application/xml; charset=utf-8"
-    Cache-Control = "no-cache"
-    X-Content-Type-Options = "nosniff"
-
-[[headers]]
-  for = "/robots.txt"
-  [headers.values]
-    Content-Type  = "text/plain; charset=utf-8"
-    Cache-Control = "no-cache"
-
-# HTML root (request ke "/") juga no-cache
-[[headers]]
-  for = "/"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-# Cache panjang untuk JS/CSS/Font (kalau ada)
 [[headers]]
   for = "/assets/js/*"
   [headers.values]
@@ -104,4 +70,40 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# HTML: no-cache
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
 
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/amp.index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# ===== sitemap & robots =====
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Content-Type  = "application/xml; charset=utf-8"
+    Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Content-Type  = "text/plain; charset=utf-8"
+    Cache-Control = "no-cache"
+
+# ===== Plugin submit sitemap: hanya di produksi =====
+[context.production]
+  [[context.production.plugins]]
+    package = "netlify-plugin-submit-sitemap"
+    [context.production.plugins.inputs]
+      providers = ["google","bing"]
+      sitemapPath = "/sitemap.xml"
