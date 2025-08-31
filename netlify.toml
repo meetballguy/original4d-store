@@ -25,6 +25,12 @@
   force  = true
   conditions = { Host = ["www.original4d.store"] }
 
+[[redirects]]
+  from = "/blog/index.html"
+  to   = "/blog/"
+  status = 301
+  force  = true
+
 # ===== Headers Global (non-AMP & default) =====
 [[headers]]
   for = "/*"
@@ -97,4 +103,5 @@
   for = "/assets/fonts/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
 
