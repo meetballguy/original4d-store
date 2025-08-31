@@ -89,8 +89,7 @@
 [[headers]]
   for = "/admin/*"
   [headers.values]
-    Cache-Control = "no-cache"
-    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; connect-src 'self' https://identity.netlify.com https://api.netlify.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://identity.netlify.com https://unpkg.com; script-src-elem 'self' 'unsafe-inline' https://identity.netlify.com https://unpkg.com; frame-src https://identity.netlify.com"
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://identity.netlify.com https://unpkg.com; script-src-elem 'self' 'unsafe-inline' https://identity.netlify.com https://unpkg.com; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://identity.netlify.com; frame-src https://identity.netlify.com"
 
 # ===== Cache policy =====
 
@@ -176,4 +175,5 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
 
