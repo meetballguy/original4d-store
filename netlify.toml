@@ -65,6 +65,12 @@
   status = 301
   force  = true
 
+# /admin/index.html -> /admin/ (kanonik)
+[[redirects]]
+  from = "/admin/index.html"
+  to   = "/admin/"
+  status = 301
+  force  = true
 
 # ===== Headers Global =====
 [[headers]]
@@ -85,11 +91,17 @@
     Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; script-src 'self' https://cdn.ampproject.org; script-src-elem 'self' https://cdn.ampproject.org 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https://*.ampproject.org; frame-src https://*.youtube.com https://*.google.com"
     Link = "<https://cdn.ampproject.org>; rel=preconnect; crossorigin"
 
-# ==== CSP khusus ADMIN (Decap CMS + Netlify Identity) ====
+# CSP utk halaman /admin/ itu sendiri
+[[headers]]
+  for = "/admin/"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://unpkg.com; script-src-elem 'self' https://identity.netlify.com https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://identity.netlify.com https://api.netlify.com https://git-gateway.netlify.com"
+
+# CSP utk semua asset di bawah /admin/*
 [[headers]]
   for = "/admin/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://unpkg.com; script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://unpkg.com; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://identity.netlify.com https://api.netlify.com https://git-gateway.netlify.com"
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://unpkg.com; script-src-elem 'self' https://identity.netlify.com https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://identity.netlify.com https://api.netlify.com https://git-gateway.netlify.com"
 
 # ===== Cache policy =====
 
@@ -175,6 +187,7 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
 
 
 
