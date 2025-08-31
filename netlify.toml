@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  # jalankan keduanya saat deploy
+  # jalankan kedua script saat deploy
   command = "node scripts/generate-sitemap.mjs && node scripts/generate-feed.mjs"
 
 [build.environment]
@@ -25,7 +25,7 @@
   status = 301
   force  = true
 
-# www -> non-www (berdasar Host)
+# www -> non-www (Host condition)
 [[redirects]]
   from = "/*"
   to   = "https://original4d.store/:splat"
@@ -48,10 +48,9 @@
   force  = true
 
 # ====================
-# Headers (keamanan + cache)
+# Headers (security + cache)
 # ====================
 
-# Global default
 [[headers]]
   for = "/*"
   [headers.values]
@@ -106,7 +105,7 @@
   [headers.values]
     Cache-Control = "no-cache"
 
-# Feed blog: no-cache supaya daftar artikel selalu segar
+# Feed blog: no-cache
 [[headers]]
   for = "/blog/feed.json"
   [headers.values]
@@ -127,7 +126,7 @@
     Cache-Control = "no-cache"
 
 # ====================
-# Submit sitemap hanya di produksi
+# Submit sitemap di produksi
 # ====================
 [context.production]
   [[context.production.plugins]]
