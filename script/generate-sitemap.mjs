@@ -21,6 +21,7 @@ function pathToUrlPath(rel){
 
 // ambil base URL dari env Netlify; fallback domain produksimu
 function getBaseUrl(){
+  if (process.env.SITE_URL) return process.env.SITE_URL; // utamakan domain kanonik
   const ctx = process.env.CONTEXT || "";
   if (ctx === "production" && process.env.URL) return process.env.URL;
   return process.env.DEPLOY_PRIME_URL || "https://original4d.store";
