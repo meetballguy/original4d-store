@@ -1,228 +1,247 @@
+// scripts/inject-structured-data.mjs
 import { promises as fs } from "fs";
 import path from "path";
 
 const ROOT = process.cwd();
-const BLOG_DIR = path.join(ROOT, "blog", "news"); // sumber artikel
-const BLOG_INDEX = path.join(ROOT, "blog", "index.html");
+const BLOG_DIR = path.join(ROOT, "blog");
+const NEWS_DIR = path.join(BLOG_DIR, "news");
+const BLOG_INDEX = path.join(BLOG_DIR, "index.html");
+const FEED_PATH = path.join(BLOG_DIR, "feed.json");
 
-// ambil base URL dari env Netlify; fallback domain produksi
-function getBaseUrl(){
-  const ctx = process.env.CONTEXT || "";
-  if (ctx === "production" && process.env.URL) return process.env.URL;
-  return process.env.DEPLOY_PRIME_URL || "https://original4d.store";
-}
-const BASE = getBaseUrl().replace(/\/+$/, "");
-
+// ---------- utils ----------
 function toPosix(p){ return p.split(path.sep).join("/"); }
-function stripTags(s){ return s?.replace(/<[^>]*>/g, "").trim() || ""; }
-function iso(dt){ return new Date(dt).toISOString(); }
+function exists(p){ return fs.access(p).then(() => true).catch(() => false); }
 
-async function readFileSafe(p){
-  try { return await fs.readFile(p, "utf8"); } catch { return ""; }
+function getBaseUrl(){
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/+$/, "");
+  const ctx = process.env.CONTEXT || "";
+  if (ctx === "production" && process.env.URL) return process.env.URL.replace(/\/+$/, "");
+  if (process.env.DEPLOY_PRIME_URL) return process.env.DEPLOY_PRIME_URL.replace(/\/+$/, "");
+  return "https://original4d.store";
 }
 
-function findFirst(html, patterns){
-  for (const r of patterns){
-    const m = html.match(r);
-    if (m?.[1]) return m[1].trim();
+function pick(re, text){
+  const m = text.match(re);
+  return m ? (m[1] || "").trim() : "";
+}
+
+function flattenNodesFromLD(ld){
+  const bag = [];
+  const pushNode = (n) => {
+    if (!n || typeof n !== "object") return;
+    if (Array.isArray(n)) { n.forEach(pushNode); return; }
+    if (n["@graph"]) pushNode(n["@graph"]);
+    bag.push(n);
+  };
+  pushNode(ld);
+  return bag;
+}
+
+function nodeHasType(node, targets){
+  const t = node["@type"];
+  const arr = Array.isArray(t) ? t : (t ? [t] : []);
+  return arr.some(x => targets.includes(String(x)));
+}
+
+function stripLdByTypes(html, targetTypes){
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi;
+  return html.replace(re, (block) => {
+    // try parse; if contains targeted types -> remove
+    const inner = block.replace(/^[\s\S]*?>/,'').replace(/<\/script>\s*$/i,'').trim();
+    try{
+      const json = JSON.parse(inner);
+      const nodes = flattenNodesFromLD(json);
+      if (nodes.some(n => nodeHasType(n, targetTypes))) {
+        return ""; // drop this block
+      }
+    }catch{/* not json, keep */}
+    return block; // keep others (e.g. Organization/WebSite)
+  });
+}
+
+function insertBeforeHeadClose(html, snippet){
+  const i = html.toLowerCase().lastIndexOf("</head>");
+  if (i === -1) return snippet + "\n" + html; // fallback prepend
+  return html.slice(0, i) + snippet + "\n" + html.slice(i);
+}
+
+function slugFromPath(filePath){
+  const posix = toPosix(path.relative(NEWS_DIR, filePath));
+  // cara-daftar/index.html -> cara-daftar
+  const noIndex = posix.replace(/\/index\.html$/i, "");
+  return noIndex.replace(/\.html$/i, "");
+}
+
+async function walkArticles(dir){
+  const list = [];
+  if (!await exists(dir)) return list;
+  const entries = await fs.readdir(dir, { withFileTypes:true });
+  for (const e of entries){
+    const abs = path.join(dir, e.name);
+    if (e.isDirectory()){
+      const idx = path.join(abs, "index.html");
+      if (await exists(idx)) list.push(idx);
+      const nested = await walkArticles(abs);
+      list.push(...nested);
+    } else if (e.isFile() && e.name.endsWith(".html")){
+      list.push(abs);
+    }
   }
-  return "";
+  // unique + prioritas index.html
+  return [...new Set(list)].filter(p => /(^|\/)index\.html$/i.test(p) || /\.html$/i.test(p));
 }
 
-function extractMeta(html){
-  const title = stripTags(
-    findFirst(html, [
-      /<h1[^>]*>([\s\S]*?)<\/h1>/i,
-      /<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']+)["']/i,
-      /<title>([^<]+)<\/title>/i
-    ])
-  );
-
-  const description = findFirst(html, [
-    /<meta[^>]+name=["']description["'][^>]*content=["']([^"']+)["']/i,
-    /<meta[^>]+property=["']og:description["'][^>]*content=["']([^"']+)["']/i
-  ]);
-
-  const canonical = findFirst(html, [
-    /<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i
-  ]);
-
-  let datePublished = findFirst(html, [
-    /<meta[^>]+property=["']article:published_time["'][^>]*content=["']([^"']+)["']/i,
-    /<time[^>]+datetime=["']([^"']+)["']/i
-  ]);
-
-  return { title, description, canonical, datePublished };
+async function loadFeedItems(){
+  if (await exists(FEED_PATH)) {
+    try{
+      const raw = await fs.readFile(FEED_PATH, "utf8");
+      const json = JSON.parse(raw);
+      return Array.isArray(json.items) ? json.items : [];
+    }catch{/* fallthrough */}
+  }
+  // fallback: scan files
+  const files = await walkArticles(NEWS_DIR);
+  const base = getBaseUrl();
+  const items = [];
+  for (const f of files){
+    const html = await fs.readFile(f, "utf8");
+    const stat = await fs.stat(f);
+    const title = pick(/<title>([\s\S]*?)<\/title>/i, html) || slugFromPath(f);
+    const desc  = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)/i, html);
+    const canonical = pick(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/i, html);
+    const slug = slugFromPath(f);
+    items.push({
+      slug,
+      url: (canonical || `${base}/blog/news/${slug}/`).replace(/\/+$/, "/"),
+      title, description: desc || "",
+      datePublished: new Date(stat.mtime).toISOString(),
+      dateModified:  new Date(stat.mtime).toISOString()
+    });
+  }
+  // sort terbaru
+  items.sort((a,b) => new Date(b.datePublished) - new Date(a.datePublished));
+  return items;
 }
 
-function buildArticleJSONLD({ url, title, description, datePublished, dateModified }){
+// ---------- builders ----------
+function buildBlogGraph(base, items){
+  const crumb = {
+    "@type":"BreadcrumbList",
+    "itemListElement":[
+      { "@type":"ListItem", "position":1, "name":"Beranda", "item": `${base}/` },
+      { "@type":"ListItem", "position":2, "name":"Blog",    "item": `${base}/blog/` }
+    ]
+  };
+  const collection = {
+    "@type":"CollectionPage",
+    "name":"Blog Original4D",
+    "description":"Kumpulan artikel terbaru dan info resmi Original4D.",
+    "url": `${base}/blog/`,
+    "inLanguage":"id-ID"
+  };
+  const itemList = {
+    "@type":"ItemList",
+    "itemListElement": items.slice(0, 50).map((it, i) => ({
+      "@type":"ListItem",
+      "position": i + 1,
+      "url": it.url,
+      "name": it.title
+    }))
+  };
+  return { "@context":"https://schema.org", "@graph":[crumb, collection, itemList] };
+}
+
+function buildArticleGraph(base, { title, description, canonical, datePublished, dateModified }){
+  const url = (canonical || "").trim() || null;
   const article = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "@id": `${url}#article`,
-    "mainEntityOfPage": { "@type": "WebPage", "@id": url },
+    "@type":"Article",
+    "mainEntityOfPage": { "@type":"WebPage", "@id": url || undefined },
     "headline": title,
     "description": description || undefined,
     "datePublished": datePublished,
-    "dateModified": dateModified,
-    "author": { "@type": "Organization", "name": "Original4D" },
+    "dateModified":  dateModified,
+    "inLanguage":"id-ID",
+    "author": { "@type":"Organization", "name":"Original4D" },
     "publisher": {
-      "@type": "Organization",
-      "name": "Original4D",
-      "logo": { "@type": "ImageObject", "url": `${BASE}/assets/img/logo.png` }
-    }
+      "@type":"Organization",
+      "name":"Original4D",
+      "logo": { "@type":"ImageObject", "url": `${base}/assets/img/logo.png` }
+    },
+    "image": [`${base}/assets/img/hero.webp`]
   };
-  const crumbs = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "@id": `${url}#breadcrumb`,
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Beranda", "item": `${BASE}/` },
-      { "@type": "ListItem", "position": 2, "name": "Blog", "item": `${BASE}/blog/` },
-      { "@type": "ListItem", "position": 3, "name": title, "item": url }
+  const crumb = {
+    "@type":"BreadcrumbList",
+    "itemListElement":[
+      { "@type":"ListItem", "position":1, "name":"Beranda", "item": `${base}/` },
+      { "@type":"ListItem", "position":2, "name":"Blog",    "item": `${base}/blog/` },
+      { "@type":"ListItem", "position":3, "name": title,    "item": url || undefined }
     ]
   };
-  return { article, crumbs };
+  return { "@context":"https://schema.org", "@graph":[crumb, article] };
 }
 
-function buildBlogIndexJSONLD(items){
-  // CollectionPage + ItemList daftar artikel
-  const collection = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "@id": `${BASE}/blog/#collection`,
-    "name": "Blog Original4D",
-    "description": "Kumpulan artikel terbaru dan info resmi Original4D.",
-    "url": `${BASE}/blog/`,
-    "inLanguage": "id-ID"
-  };
-  const itemList = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "@id": `${BASE}/blog/#items`,
-    "url": `${BASE}/blog/`,
-    "itemListElement": items.map((it, i) => ({
-      "@type": "ListItem",
-      "position": i + 1,
-      "url": it.url,
-      "name": it.title,
-      "description": it.description || undefined,
-      "datePublished": it.datePublished
-    }))
-  };
-  return { collection, itemList };
+// ---------- injectors ----------
+async function injectBlogIndex(){
+  if (!await exists(BLOG_INDEX)) return { changed:false, reason:"/blog/index.html not found" };
+  const base = getBaseUrl();
+  const items = await loadFeedItems();
+
+  let html = await fs.readFile(BLOG_INDEX, "utf8");
+  // buang LD yang kita target (biarkan Organization/WebSite tetap)
+  html = stripLdByTypes(html, ["BreadcrumbList", "CollectionPage", "ItemList"]);
+
+  const graph = buildBlogGraph(base, items);
+  const tag = `<script type="application/ld+json">${JSON.stringify(graph)}</script>`;
+  html = insertBeforeHeadClose(html, "\n  " + tag);
+
+  await fs.writeFile(BLOG_INDEX, html, "utf8");
+  return { changed:true, count: items.length };
 }
 
-function injectAutogenJSONLD(html, scripts){
-  // Hapus autogen lama
-  html = html.replace(
-    /<script[^>]+type=["']application\/ld\+json["'][^>]*data-autogen=["']true["'][^>]*>[\s\S]*?<\/script>\s*/gi,
-    ""
-  );
-  const block = scripts.map(obj =>
-    `<script type="application/ld+json" data-autogen="true">${JSON.stringify(obj)}</script>`
-  ).join("\n");
+async function injectArticles(){
+  const base = getBaseUrl();
+  const files = await walkArticles(NEWS_DIR);
+  const feedItems = await loadFeedItems();
+  const byUrl = new Map(feedItems.map(it => [it.url.replace(/\/+$/,"/"), it]));
+  const out = { total: files.length, updated:0 };
 
-  // Sisipkan sebelum </head> jika ada, kalau tidak—sebelum </body>
-  if (/<\/head>/i.test(html)) {
-    return html.replace(/<\/head>/i, `${block}\n</head>`);
-  }
-  if (/<\/body>/i.test(html)) {
-    return html.replace(/<\/body>/i, `${block}\n</body>`);
-  }
-  // fallback: append
-  return html + "\n" + block + "\n";
-}
+  for (const f of files){
+    let html = await fs.readFile(f, "utf8");
 
-async function listPostFiles(){
-  const out = [];
-  async function walk(dir){
-    let entries = [];
-    try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return; }
-    for (const e of entries){
-      const abs = path.join(dir, e.name);
-      if (e.isDirectory()){
-        await walk(abs);
-      } else if (e.isFile() && e.name.toLowerCase() === "index.html"){
-        out.push(abs);
-      }
-    }
+    // metadata fallback dari HTML
+    const title = pick(/<title>([\s\S]*?)<\/title>/i, html) || slugFromPath(f);
+    const description = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)/i, html) || "";
+    const canonical = pick(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/i, html) || null;
+
+    // padankan dengan feed berdasarkan canonical/url
+    const key = (canonical || "").replace(/\/+$/,"/");
+    const fi = key && byUrl.get(key) ? byUrl.get(key) : null;
+
+    const stat = await fs.stat(f);
+    const graph = buildArticleGraph(base, {
+      title,
+      description,
+      canonical,
+      datePublished: fi?.datePublished || new Date(stat.mtime).toISOString(),
+      dateModified:  fi?.dateModified  || new Date(stat.mtime).toISOString()
+    });
+
+    // buang LD bertipe Article/BreadcrumbList sebelumnya
+    html = stripLdByTypes(html, ["Article", "BreadcrumbList"]);
+
+    const tag = `<script type="application/ld+json">${JSON.stringify(graph)}</script>`;
+    html = insertBeforeHeadClose(html, "\n  " + tag);
+    await fs.writeFile(f, html, "utf8");
+    out.updated++;
   }
-  await walk(BLOG_DIR);
   return out;
 }
 
-function fileRelUrl(abs){
-  const rel = toPosix(path.relative(ROOT, abs));
-  // normalisasi index.html → path folder
-  const urlPath = "/" + rel.replace(/(^|\/)index\.html$/i, "");
-  return (urlPath.endsWith("/") ? urlPath : urlPath + "/");
-}
-
-async function processArticle(abs){
-  const html = await readFileSafe(abs);
-  if (!html) return null;
-
-  const { title, description, canonical, datePublished } = extractMeta(html);
-  const stat = await fs.stat(abs);
-  const url = canonical || (BASE + fileRelUrl(abs));
-  const dp = datePublished || iso(stat.mtime);
-  const dm = iso(stat.mtime);
-
-  const { article, crumbs } = buildArticleJSONLD({
-    url, title, description, datePublished: dp, dateModified: dm
-  });
-
-  const newHtml = injectAutogenJSONLD(html, [crumbs, article]);
-  if (newHtml !== html){
-    await fs.writeFile(abs, newHtml, "utf8");
-  }
-
-  return {
-    path: abs,
-    url,
-    title: title || "(Tanpa judul)",
-    description: description || "",
-    datePublished: dp
-  };
-}
-
-async function processBlogIndex(items){
-  let html = await readFileSafe(BLOG_INDEX);
-  if (!html) return;
-
-  // Sort terbaru dulu (berdasarkan datePublished)
-  items.sort((a,b) => (new Date(b.datePublished)) - (new Date(a.datePublished)));
-
-  const { collection, itemList } = buildBlogIndexJSONLD(items);
-  const newHtml = injectAutogenJSONLD(html, [collection, itemList]);
-
-  if (newHtml !== html){
-    await fs.writeFile(BLOG_INDEX, newHtml, "utf8");
-  }
-
-  // (opsional) feed JSON untuk /assets/js/blog.js
-  const feed = items.map(({ url, title, description, datePublished }) => ({
-    url, title, description, datePublished
-  }));
-  const feedPath = path.join(ROOT, "blog", "feed.json");
-  await fs.writeFile(feedPath, JSON.stringify(feed, null, 2) + "\n", "utf8");
-}
-
+// ---------- run ----------
 async function main(){
-  const files = await listPostFiles();
-  const items = [];
-  for (const f of files){
-    const item = await processArticle(f);
-    if (item) items.push(item);
-  }
-  if (items.length){
-    await processBlogIndex(items);
-  }
-  console.log(`Injected JSON-LD to ${items.length} article(s) + blog index`);
+  const bi = await injectBlogIndex();
+  const ar = await injectArticles();
+  console.log(`LD injected → /blog/: ${bi.changed ? "OK" : "SKIPPED"} (items:${bi.count ?? 0}), articles updated: ${ar.updated}/${ar.total}`);
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(2);
-});
+main().catch(e => { console.error(e); process.exit(1); });
