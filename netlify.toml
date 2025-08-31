@@ -107,3 +107,7 @@
     [context.production.plugins.inputs]
       providers = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
+# (opsional) pastikan Node versi baru
+[build.environment]
+  NODE_VERSION = "20"
