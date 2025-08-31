@@ -31,12 +31,6 @@
   status = 301
   force  = true
 
-[[redirects]]
-  from = "/blog/news/:slug.html"
-  to   = "/blog/news/:slug/"
-  status = 301
-  force  = true
-
 # ===== Headers Global =====
 [[headers]]
   for = "/*"
@@ -118,6 +112,7 @@
 [build.environment]
   NODE_VERSION = "20"
   SITE_URL     = "https://original4d.store"
+
 
 
 
