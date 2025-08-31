@@ -1,7 +1,7 @@
-# ===== Build: jalankan 2 skrip (sitemap + feed) =====
+# ===== Build: generate posts -> inject partials -> feeds -> sitemap =====
 [build]
   publish = "."
-  command = "node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
+  command = "node scripts/build-posts.mjs && node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -23,7 +23,7 @@
   status = 301
   force  = true
 
-# www -> non-www (pakai Host condition)
+# www -> non-www (host condition)
 [[redirects]]
   from = "/*"
   to   = "https://original4d.store/:splat"
@@ -38,15 +38,14 @@
   status = 301
   force  = true
 
-# Pagination paths:
-# normalisasi tanpa slash -> berslash
+# Pagination: tanpa slash -> berslash
 [[redirects]]
   from   = "/blog/page/:page"
   to     = "/blog/page/:page/"
   status = 301
   force  = true
 
-# serve konten /blog/ untuk semua /blog/page/:page/ (JS handle paging)
+# Serve konten /blog/ untuk semua /blog/page/:page/ (JS handle paging)
 [[redirects]]
   from   = "/blog/page/:page/"
   to     = "/blog/"
@@ -59,6 +58,14 @@
   status = 301
   force  = true
 
+# /admin -> /admin/
+[[redirects]]
+  from = "/admin"
+  to   = "/admin/"
+  status = 301
+  force  = true
+
+
 # ===== Headers Global =====
 [[headers]]
   for = "/*"
@@ -68,18 +75,24 @@
     X-Frame-Options           = "SAMEORIGIN"
     Referrer-Policy           = "strict-origin-when-cross-origin"
     Permissions-Policy        = "geolocation=(), microphone=(), camera=(), browsing-topics=()"
-    # Izinkan inline script & inline event handlers (attr) + inline style
+    # Izinkan inline script/style & inline event handlers (but tetap 'self' untuk sumber)
     Content-Security-Policy   = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'"
 
 # ===== CSP override khusus AMP =====
 [[headers]]
   for = "/amp.index.html"
   [headers.values]
-    # AMP perlu runtime + inline JSON-LD => tambahkan 'unsafe-inline' di script-src-elem
     Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; script-src 'self' https://cdn.ampproject.org; script-src-elem 'self' https://cdn.ampproject.org 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https://*.ampproject.org; frame-src https://*.youtube.com https://*.google.com"
     Link = "<https://cdn.ampproject.org>; rel=preconnect; crossorigin"
 
+# ===== CSP override untuk /admin/* (Decap CMS + Netlify Identity) =====
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://identity.netlify.com https://unpkg.com https://cdn.jsdelivr.net; script-src-elem 'self' 'unsafe-inline' https://identity.netlify.com https://unpkg.com https://cdn.jsdelivr.net; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https://api.netlify.com https://identity.netlify.com; frame-src https://identity.netlify.com"
+
 # ===== Cache policy =====
+
 # HTML utama & daftar blog jangan di-cache agar paging & listing selalu fresh
 [[headers]]
   for = "/"
@@ -106,7 +119,7 @@
   [headers.values]
     Cache-Control = "no-cache"
 
-# Asset versi file-name (hash) boleh cache panjang
+# Assets: cache panjang
 [[headers]]
   for = "/assets/img/*"
   [headers.values]
@@ -155,13 +168,10 @@
     Content-Type  = "text/plain; charset=utf-8"
     Cache-Control = "no-cache"
 
-# ===== Plugin submit sitemap (hanya produksi) =====
+# ===== Plugin submit sitemap (production only) =====
 [context.production]
   [[context.production.plugins]]
     package = "netlify-plugin-submit-sitemap"
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
-
-
-
