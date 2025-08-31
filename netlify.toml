@@ -1,15 +1,13 @@
+# ===== Build: jalankan 2 skrip (sitemap + feed) =====
 [build]
   publish = "."
-  # jalankan kedua script saat deploy
   command = "node scripts/generate-sitemap.mjs && node scripts/generate-feed.mjs"
 
 [build.environment]
   NODE_VERSION = "20"
   SITE_URL     = "https://original4d.store"
 
-# ====================
-# Redirects (kanonik)
-# ====================
+# ===== Redirects / Canonical =====
 
 # /index.html -> /
 [[redirects]]
@@ -25,7 +23,7 @@
   status = 301
   force  = true
 
-# www -> non-www (Host condition)
+# www -> non-www (pakai Host condition)
 [[redirects]]
   from = "/*"
   to   = "https://original4d.store/:splat"
@@ -40,10 +38,35 @@
   status = 301
   force  = true
 
-# ====================
-# Headers (security + cache)
-# ====================
+# Bereskan .html ke folder slug (opsional)
+[[redirects]]
+  from = "/blog/news/:slug.html"
+  to   = "/blog/news/:slug/"
+  status = 301
+  force  = true
 
+# Pagination paths:
+# normalisasi tanpa slash -> berslash
+[[redirects]]
+  from   = "/blog/page/:page"
+  to     = "/blog/page/:page/"
+  status = 301
+  force  = true
+
+# serve konten /blog/ untuk semua /blog/page/:page/ (JS handle paging)
+[[redirects]]
+  from   = "/blog/page/:page/"
+  to     = "/blog/"
+  status = 200
+
+# /blog/page/1/ -> /blog/ (kanonikal)
+[[redirects]]
+  from   = "/blog/page/1/"
+  to     = "/blog/"
+  status = 301
+  force  = true
+
+# ===== Security & Misc Headers =====
 [[headers]]
   for = "/*"
   [headers.values]
@@ -52,16 +75,44 @@
     X-Frame-Options           = "SAMEORIGIN"
     Referrer-Policy           = "strict-origin-when-cross-origin"
     Permissions-Policy        = "geolocation=(), microphone=(), camera=(), browsing-topics=()"
+    # CSP global: hanya sumber 'self', inline style/script diizinkan (karena halaman pakai inline).
     Content-Security-Policy   = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'"
 
-# CSP khusus AMP
+# CSP khusus AMP (butuh cdn.ampproject.org)
 [[headers]]
   for = "/amp.index.html"
   [headers.values]
     Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; script-src 'self' https://cdn.ampproject.org; script-src-elem 'self' https://cdn.ampproject.org; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https://*.ampproject.org; frame-src https://*.youtube.com https://*.google.com"
     Link = "<https://cdn.ampproject.org>; rel=preconnect; crossorigin"
 
-# Cache panjang untuk aset
+# ===== Cache policy =====
+# HTML utama & daftar blog jangan di-cache agar paging & listing selalu fresh
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/amp.index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/blog/"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/blog/page/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# Asset versi file-name (hash) boleh cache panjang
 [[headers]]
   for = "/assets/img/*"
   [headers.values]
@@ -82,29 +133,21 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# HTML: no-cache
-[[headers]]
-  for = "/"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/index.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/amp.index.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-# Feed blog: no-cache
+# ===== Feeds / Sitemap / Robots =====
 [[headers]]
   for = "/blog/feed.json"
   [headers.values]
+    Content-Type  = "application/json; charset=utf-8"
     Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
 
-# Sitemap & robots
+[[headers]]
+  for = "/blog/feed.xml"
+  [headers.values]
+    Content-Type  = "application/rss+xml; charset=utf-8"
+    Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
+
 [[headers]]
   for = "/sitemap.xml"
   [headers.values]
@@ -118,13 +161,10 @@
     Content-Type  = "text/plain; charset=utf-8"
     Cache-Control = "no-cache"
 
-# ====================
-# Submit sitemap di produksi
-# ====================
+# ===== Plugin submit sitemap (hanya produksi) =====
 [context.production]
   [[context.production.plugins]]
     package = "netlify-plugin-submit-sitemap"
     [context.production.plugins.inputs]
-      providers = ["google","bing"]
+      providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
-
