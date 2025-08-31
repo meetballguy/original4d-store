@@ -113,6 +113,9 @@
   NODE_VERSION = "20"
   SITE_URL     = "https://original4d.store"
 
+[build]
+  command = "node scripts/generate-sitemap.mjs && node scripts/generate-feed.mjs"
+
 
 
 
