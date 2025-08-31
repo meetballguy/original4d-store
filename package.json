@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
+    "build": "node scripts/build-posts.mjs && node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/inject-structured-data.mjs && node scripts/generate-sitemap.mjs"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "marked": "^12.0.2"
   }
 }
