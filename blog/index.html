@@ -10,8 +10,6 @@
   <link rel="icon" type="image/png" href="/assets/img/favicon.png">
   <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
   <meta name="theme-color" content="#000000">
-
-  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Blog Original4D — Artikel Terbaru, Tips & Info Resmi">
   <meta property="og:description" content="Artikel terbaru Original4D: info resmi, tips akses, dan update. Semua tautan tervalidasi.">
@@ -104,6 +102,58 @@
            border-radius:999px;padding:6px 10px;font-size:12px;color:#fff}
   </style>
 </head>
+  <script type="module">
+(function(){
+  const m = location.pathname.match(/\/blog\/page\/(\d+)\//);
+  const page = m ? Math.max(1, parseInt(m[1],10)) : 1;
+  const base = 'https://original4d.store';
+  const canonical = page === 1 ? `${base}/blog/` : `${base}/blog/page/${page}/`;
+
+  // set/replace canonical
+  let can = document.querySelector('link[rel="canonical"]');
+  if (!can) { can = document.createElement('link'); can.rel = 'canonical'; document.head.appendChild(can); }
+  can.href = canonical;
+
+  // prev / next
+  const head = document.head;
+  const addRel = (rel, href) => { const l = document.createElement('link'); l.rel = rel; l.href = href; head.appendChild(l); };
+  if (page > 1) addRel('prev', page === 2 ? `${base}/blog/` : `${base}/blog/page/${page-1}/`);
+  // untuk next, kamu bisa hitung jumlah halaman dari feed.json (opsional). Contoh ringan:
+  fetch('/blog/feed.json',{cache:'no-store'}).then(r=>r.json()).then(feed=>{
+    const total = (feed && feed._meta && feed._meta.totalPages) || null; // isi dari generate-feed.mjs
+    if (!total || page < total) addRel('next', `${base}/blog/page/${page+1}/`);
+  }).catch(()=>{ /* fallback: tetap pasang next satu step */ addRel('next', `${base}/blog/page/${page+1}/`); });
+
+  // inject List/ItemList JSON-LD (top 10 di halaman ini)
+  fetch('/blog/feed.json',{cache:'no-store'}).then(r=>r.json()).then(feed=>{
+    const perPage = 10;
+    const items = (feed.items || []);
+    const start = (page-1)*perPage;
+    const slice = items.slice(start, start+perPage);
+    if (!slice.length) return;
+    const ld = {
+      "@context":"https://schema.org",
+      "@type":"CollectionPage",
+      "name":"Blog Original4D",
+      "url": canonical,
+      "hasPart": {
+        "@type":"ItemList",
+        "itemListElement": slice.map((it,idx)=>({
+          "@type":"ListItem",
+          "position": start + idx + 1,
+          "url": it.url,
+          "name": it.title
+        }))
+      }
+    };
+    const s = document.createElement('script');
+    s.type='application/ld+json';
+    s.textContent = JSON.stringify(ld);
+    document.head.appendChild(s);
+  }).catch(()=>{});
+})();
+</script>
+
 <body>
   <!-- Header -->
   <header>
