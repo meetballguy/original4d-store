@@ -103,11 +103,6 @@
   [headers.values]
     Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://unpkg.com; script-src-elem 'self' https://identity.netlify.com https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://identity.netlify.com https://api.netlify.com https://git-gateway.netlify.com"
 
-[[headers]]
-  for = "/admin/*"
-  [headers.values]
-    Cache-Control = "no-cache"
-
 # ===== Cache policy =====
 
 # HTML utama & daftar blog jangan di-cache agar paging & listing selalu fresh
@@ -192,9 +187,3 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
-
-
-
-
-
-
