@@ -40,13 +40,6 @@
   status = 301
   force  = true
 
-# /blog/news/slug.html -> /blog/news/slug/
-[[redirects]]
-  from = "/blog/news/:slug.html"
-  to   = "/blog/news/:slug/"
-  status = 301
-  force  = true
-
 # ====================
 # Headers (security + cache)
 # ====================
@@ -134,3 +127,4 @@
     [context.production.plugins.inputs]
       providers = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
