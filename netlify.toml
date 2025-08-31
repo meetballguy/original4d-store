@@ -117,4 +117,7 @@
 # (opsional) pastikan Node versi baru
 [build.environment]
   NODE_VERSION = "20"
+  SITE_URL     = "https://original4d.store"
+
+
 
