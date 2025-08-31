@@ -1,0 +1,25 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+
+publish_mode: simple
+
+collections:
+  - name: "news"
+    label: "Artikel News"
+    folder: "content/news"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    fields:
+      - { name: "title", label: "Judul", widget: "string" }
+      - { name: "description", label: "Deskripsi", widget: "text", hint: "Max ~160 karakter" }
+      - { name: "date", label: "Tanggal Terbit", widget: "datetime" }
+      - { name: "updated", label: "Tanggal Update", widget: "datetime", required: false }
+      - { name: "draft", label: "Draft?", widget: "boolean", default: false }
+      - { name: "slug", label: "Slug (opsional)", widget: "string", required: false, hint: "Kosongkan untuk pakai nama file" }
+      - { name: "body", label: "Konten", widget: "markdown" }
