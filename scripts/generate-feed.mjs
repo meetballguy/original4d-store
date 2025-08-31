@@ -3,145 +3,151 @@ import { promises as fs } from "fs";
 import path from "path";
 
 const ROOT = process.cwd();
+const SITE_URL = (process.env.SITE_URL || process.env.URL || "https://original4d.store").replace(/\/+$/,"");
 const BLOG_DIR = path.join(ROOT, "blog", "news");
-const FEED_PATH = path.join(ROOT, "blog", "feed.json");
 
-// --- utils ---
 function toPosix(p){ return p.split(path.sep).join("/"); }
+function iso(dt){ return new Date(dt).toISOString(); }
+function rfc822(dt){ return new Date(dt).toUTCString(); }
 
-function getBaseUrl(){
-  // Urutan prioritas: SITE_URL (kamu set di netlify.toml), URL (production), DEPLOY_PRIME_URL (preview)
-  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/+$/, "");
-  const ctx = process.env.CONTEXT || "";
-  if (ctx === "production" && process.env.URL) return process.env.URL.replace(/\/+$/, "");
-  if (process.env.DEPLOY_PRIME_URL) return process.env.DEPLOY_PRIME_URL.replace(/\/+$/, "");
-  return "https://original4d.store";
-}
-
-async function exists(p){ try{ await fs.access(p); return true; } catch { return false; } }
-
-async function walkPosts(dir){
+async function walkArticles(dir){
   const out = [];
-  if (!await exists(dir)) return out;
-
-  const entries = await fs.readdir(dir, { withFileTypes:true });
-  for (const e of entries){
-    const abs = path.join(dir, e.name);
-    if (e.isDirectory()){
-      // post model: /blog/news/<slug>/index.html
-      const idx = path.join(abs, "index.html");
-      if (await exists(idx)) out.push(idx);
-      // (opsional) dukung legacy: /blog/news/<slug>.html
-      const legacy = path.join(dir, `${e.name}.html`);
-      if (await exists(legacy)) out.push(legacy);
-      // juga telusuri nested kalau ada
-      const nested = await walkPosts(abs);
-      out.push(...nested);
-    } else if (e.isFile() && e.name.endsWith(".html")){
-      out.push(abs);
-    }
-  }
-  // unikkan
-  return [...new Set(out)];
-}
-
-function pick(regex, text){
-  const m = text.match(regex);
-  return m ? (m[1] || "").trim() : "";
-}
-
-function parseJsonLDBlocks(html){
-  const blocks = [];
-  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-  let m;
-  while ((m = re.exec(html))){ 
-    const raw = m[1].trim();
-    try {
-      blocks.push(JSON.parse(raw));
-    } catch { /* skip invalid JSON-LD */ }
-  }
-  return blocks;
-}
-
-function findArticleFromLd(ld){
-  // ld bisa object, array, atau @graph
-  const list = Array.isArray(ld) ? ld : [ld];
-  const flat = [];
-  for (const node of list){
-    if (node && typeof node === "object"){
-      if (node["@graph"] && Array.isArray(node["@graph"])) {
-        flat.push(...node["@graph"]);
-      } else {
-        flat.push(node);
+  async function walk(d){
+    const entries = await fs.readdir(d, { withFileTypes:true });
+    for (const e of entries){
+      const abs = path.join(d, e.name);
+      if (e.isDirectory()){
+        await walk(abs);
+      } else if (e.isFile() && e.name === "index.html"){
+        out.push(abs);
       }
     }
   }
-  return flat.find(n => (n["@type"] === "Article" || (Array.isArray(n["@type"]) && n["@type"].includes("Article"))));
+  await walk(dir);
+  return out;
 }
 
-function slugFromPath(p){
-  const posix = toPosix(path.relative(path.join(ROOT, "blog", "news"), p));
-  // contoh:
-  // 1) cara-daftar/index.html -> cara-daftar
-  // 2) cara-daftar.html       -> cara-daftar
-  const noIndex = posix.replace(/\/index\.html$/i, "");
-  return noIndex.replace(/\.html$/i, "");
+function extract(regex, html, def=""){
+  const m = html.match(regex);
+  return m ? m[1].trim() : def;
 }
 
-function toISO(d){ return new Date(d).toISOString(); }
+function deriveUrlFromPath(abs){
+  const rel = toPosix(path.relative(ROOT, abs)); // blog/news/slug/index.html
+  const urlPath = "/" + rel.replace(/\/index\.html$/, "/");
+  return SITE_URL + urlPath;
+}
 
-// --- main ---
+async function readOne(abs){
+  const html = await fs.readFile(abs, "utf8");
+
+  // Prefer JSON-LD Article dates
+  const datePublished = extract(/"datePublished"\s*:\s*"([^"]+)"/i, html, "");
+  const dateModified  = extract(/"dateModified"\s*:\s*"([^"]+)"/i, html, "");
+
+  const title = extract(/<title[^>]*>([^<]+)<\/title>/i, html,
+                 extract(/<h1[^>]*>([^<]+)<\/h1>/i, html, "Artikel"));
+
+  const description = extract(/<meta[^>]+name=["']description["'][^>]+content=["']([^"]*)["']/i, html, "");
+
+  const canonical = extract(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"]+)["']/i, html, "") || deriveUrlFromPath(abs);
+
+  const slug = toPosix(path.dirname(path.relative(path.join(ROOT,"blog","news"), abs))); // slug/
+  const stat = await fs.stat(abs);
+  const fallbackDate = iso(stat.mtime);
+
+  return {
+    url: canonical,
+    slug: slug.replace(/\/+$/,""),
+    title,
+    description,
+    datePublished: datePublished || fallbackDate,
+    dateModified:  dateModified  || datePublished || fallbackDate
+  };
+}
+
+function byDateDesc(a,b){
+  const ad = a.dateModified || a.datePublished;
+  const bd = b.dateModified || b.datePublished;
+  return new Date(bd) - new Date(ad);
+}
+
 async function main(){
-  const base = getBaseUrl();
-  const files = await walkPosts(BLOG_DIR);
-
-  const items = [];
-  for (const filePath of files){
-    const html = await fs.readFile(filePath, "utf8");
-    const stat = await fs.stat(filePath);
-    const ldBlocks = parseJsonLDBlocks(html);
-    const article = ldBlocks.map(findArticleFromLd).find(Boolean);
-
-    const titleFromTag = pick(/<title>([\s\S]*?)<\/title>/i, html);
-    const desc = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i, html);
-    const canonical = pick(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i, html);
-    const slug = slugFromPath(filePath);
-
-    const url = canonical || `${base}/blog/news/${slug}/`;
-    const title = (article?.headline || titleFromTag || slug).trim();
-    const datePublished = article?.datePublished || toISO(stat.mtime);
-    const dateModified  = article?.dateModified  || toISO(stat.mtime);
-
-    // ambil ringkasan pendek 160–200 karakter
-    const description = (article?.description || desc || "").slice(0, 220);
-
-    items.push({
-      slug,
-      url,
-      title,
-      description,
-      datePublished,
-      dateModified
-    });
+  // 1) kumpulkan artikel
+  let items = [];
+  try{
+    const files = await walkArticles(BLOG_DIR);
+    items = await Promise.all(files.map(readOne));
+    items.sort(byDateDesc);
+  }catch(e){
+    console.error("Gagal membaca artikel:", e);
   }
 
-  // sort terbaru dulu
-  items.sort((a,b) => new Date(b.datePublished) - new Date(a.datePublished));
-
-  // tulis feed
-  const feed = {
+  // 2) feed.json
+  const jsonFeed = {
     version: 1,
-    site: base,
-    generatedAt: new Date().toISOString(),
+    site: { title: "Blog Original4D", url: SITE_URL, home: `${SITE_URL}/blog/` },
+    generatedAt: iso(Date.now()),
     items
   };
-  await fs.mkdir(path.dirname(FEED_PATH), { recursive:true });
-  await fs.writeFile(FEED_PATH, JSON.stringify(feed, null, 2) + "\n", "utf8");
+  await fs.writeFile(path.join(ROOT, "blog", "feed.json"), JSON.stringify(jsonFeed, null, 2), "utf8");
 
-  console.log(`Generated blog feed with ${items.length} posts → ${path.relative(ROOT, FEED_PATH)}`);
+  // 3) RSS 2.0 (feed.xml)
+  const rssItems = items.map(it => `
+    <item>
+      <title>${escapeXml(it.title)}</title>
+      <link>${it.url}</link>
+      <guid isPermaLink="true">${it.url}</guid>
+      <pubDate>${rfc822(it.datePublished || it.dateModified)}</pubDate>
+      ${it.description ? `<description><![CDATA[${it.description}]]></description>` : ""}
+    </item>`).join("\n");
+
+  const rss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>Blog Original4D</title>
+  <link>${SITE_URL}/blog/</link>
+  <description>Artikel terbaru, tips akses & info resmi Original4D.</description>
+  <language>id-ID</language>
+  <lastBuildDate>${rfc822(Date.now())}</lastBuildDate>
+${rssItems}
+</channel>
+</rss>
+`;
+  await fs.writeFile(path.join(ROOT,"blog","feed.xml"), rss.trim()+"\n", "utf8");
+
+  // 4) Atom (atom.xml)
+  const atomEntries = items.map(it => `
+  <entry>
+    <title>${escapeXml(it.title)}</title>
+    <link href="${it.url}"/>
+    <id>${it.url}</id>
+    <updated>${iso(it.dateModified || it.datePublished)}</updated>
+    ${it.description ? `<summary type="html"><![CDATA[${it.description}]]></summary>` : ""}
+    <published>${iso(it.datePublished || it.dateModified)}</published>
+  </entry>`).join("\n");
+
+  const atom = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="id-ID">
+  <title>Blog Original4D</title>
+  <id>${SITE_URL}/blog/</id>
+  <link href="${SITE_URL}/blog/"/>
+  <link rel="self" href="${SITE_URL}/blog/atom.xml"/>
+  <updated>${iso(Date.now())}</updated>
+${atomEntries}
+</feed>`;
+  await fs.writeFile(path.join(ROOT,"blog","atom.xml"), atom.trim()+"\n", "utf8");
+
+  console.log(`feed: ${items.length} artikel → feed.json, feed.xml (RSS), atom.xml`);
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+function escapeXml(s){
+  return String(s).replace(/[<>&'"]/g, ch => (
+    ch === "<" ? "&lt;" :
+    ch === ">" ? "&gt;" :
+    ch === "&" ? "&amp;" :
+    ch === "'" ? "&apos;" : "&quot;"
+  ));
+}
+
+main().catch(e => { console.error(e); process.exit(1); });
