@@ -2,12 +2,28 @@
   publish = "."
   command = ""   # situs statis, tidak butuh build
 
-# Redirect (opsional) - paksa non-www jadi kanonik
+# 1) Kanonikal: /index.html -> /
 [[redirects]]
-  from = "https://www.original4d.store/*"
+  from = "/index.html"
+  to   = "/"
+  status = 301
+  force  = true
+
+# 2) Skema: http -> https (opsional tapi baik)
+[[redirects]]
+  from = "http://original4d.store/*"
   to   = "https://original4d.store/:splat"
   status = 301
   force  = true
+
+# 3) www -> non-www (pakai conditions Host)
+#    (hapus rule lama yang memakai full URL di `from`)
+[[redirects]]
+  from = "/*"
+  to   = "https://original4d.store/:splat"
+  status = 301
+  force  = true
+  conditions = { Host = ["www.original4d.store"] }
 
 # ===== Headers Global (non-AMP & default) =====
 [[headers]]
@@ -59,3 +75,4 @@
   [headers.values]
     Content-Type  = "text/plain; charset=utf-8"
     Cache-Control = "no-cache"
+
