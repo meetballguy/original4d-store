@@ -1,0 +1,241 @@
+/* =========================================
+   Original4D – Blog & Article Global Styles
+   Path: /assets/css/blog.css
+   Selaras dengan homepage (token & estetika)
+   ========================================= */
+
+/* ---------- Design Tokens ---------- */
+:root{
+  --brand:#ffd700;
+  --bg1:#0b2a3a;
+  --bg2:#108aa0;
+  --text:#eef2f7;
+  --muted:rgba(255,255,255,.72);
+  --card:rgba(0,0,0,.32);
+  --border:rgba(255,255,255,.12);
+  --shadow:0 8px 28px rgba(0,0,0,.18);
+  --radius:16px;
+  --radius-sm:12px;
+  --maxw:1100px;                  /* blog a bit slimmer */
+  --gut:clamp(16px,4vw,40px);
+  --space:clamp(12px,2.2vw,24px);
+  --space-lg:clamp(18px,3vw,36px);
+  --fs-1:clamp(26px,3vw,40px);
+  --fs-2:clamp(18px,2.2vw,24px);
+  --fs-3:clamp(14px,1.6vw,16px);
+  --header-h:clamp(56px,6vw,72px);
+}
+
+/* ---------- Base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--text);
+  background:linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;
+}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+.visually-hidden{
+  position:absolute !important;height:1px;width:1px;overflow:hidden;
+  clip:rect(1px,1px,1px,1px);white-space:nowrap;clip-path:inset(50%);border:0;padding:0;margin:-1px
+}
+
+/* ---------- Layout Containers ---------- */
+.container, .wrap{
+  max-width:var(--maxw);
+  margin-inline:auto;
+  padding-inline:var(--gut);
+}
+main.wrap, main.container{
+  padding:calc(var(--space) + 12px) var(--gut) var(--space);
+}
+
+/* ---------- Header / Nav (selaras homepage) ---------- */
+header.site-header{
+  position:sticky;top:0;z-index:10;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+}
+.nav{
+  max-width:var(--maxw);
+  margin:auto;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:10px var(--gut);
+  min-height:var(--header-h);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{display:block;width:160px;height:auto}
+.badge{
+  display:inline-block;
+  background:rgba(0,0,0,.24);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  color:#fff;
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-block;
+  padding:10px 16px;
+  border-radius:28px;
+  border:2px solid var(--brand);
+  color:#111;
+  background:var(--brand);
+  font-weight:700;
+  text-align:center;
+  transition:opacity .15s ease, transform .15s ease;
+}
+.btn:hover{opacity:.92}
+.btn:active{transform:translateY(1px)}
+.btn.outline{
+  background:transparent;
+  color:var(--brand);
+  border-color:var(--brand);
+}
+
+/* ---------- Headings & text ---------- */
+h1{font-size:var(--fs-1);margin:.2rem 0;color:var(--brand)}
+h2{font-size:var(--fs-2);margin:14px 0 8px;color:#fff}
+p{font-size:var(--fs-3);line-height:1.7;margin:8px 0}
+.lead{color:var(--muted);margin:.2rem 0 1rem}
+
+/* ---------- Cards & Grid (blog list) ---------- */
+.grid{display:grid;gap:var(--space);grid-template-columns:1fr}
+@media(min-width:860px){ .grid{grid-template-columns:1fr 1fr} }
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.card h2{margin:0;color:#fff}
+.meta{font-size:13px;color:var(--muted)}
+.desc{color:#eef2f7}
+
+/* ---------- Skeleton (loading) ---------- */
+.skeleton{
+  background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.16),rgba(255,255,255,.06));
+  background-size:200% 100%;
+  animation:shine 1.2s linear infinite;
+  border-radius:8px;min-height:16px
+}
+@keyframes shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ---------- Search & Toolbar ---------- */
+.filters{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 18px
+}
+.search{flex:1;min-width:220px}
+.search input{
+  width:100%;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.25);
+  color:#fff;outline:none
+}
+
+/* ---------- Breadcrumb visual ---------- */
+.crumb{
+  font-size:14px;color:var(--muted);margin:2px 0 12px
+}
+.crumb a{color:var(--text);text-decoration:none}
+.crumb a:hover{text-decoration:underline}
+.crumb .sep{
+  display:inline-block;margin:0 6px;color:var(--muted)
+}
+
+/* ---------- Last-updated mini ---------- */
+.last-updated{
+  display:flex;align-items:center;gap:8px;margin-top:6px;
+  font-size:12px;color:var(--muted)
+}
+.last-updated .dot{
+  width:8px;height:8px;border-radius:999px;background:var(--brand);
+  box-shadow:0 0 0 0 rgba(255,215,0,.6);
+  animation:pulse 1.6s ease-out infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(255,215,0,.6)}
+  100%{box-shadow:0 0 0 8px rgba(255,215,0,0)}
+}
+
+/* ---------- Pagination (optional UI) ---------- */
+.pager{
+  display:flex;justify-content:center;gap:10px;margin:22px 0;flex-wrap:wrap
+}
+.pager a, .pager span{
+  display:inline-block;padding:8px 12px;border-radius:10px;
+  border:1px solid var(--border);background:rgba(0,0,0,.22);
+  color:#fff;text-decoration:none
+}
+.pager .active{background:var(--brand);color:#111;border-color:var(--brand)}
+
+/* ---------- Article page ---------- */
+.article-wrap{max-width:800px;margin:0 auto} /* narrower reading width */
+.post-header{margin-bottom:14px}
+.post-meta{font-size:13px;color:var(--muted)}
+
+.post-content{
+  background:rgba(0,0,0,.18);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:clamp(14px,2.2vw,22px);
+}
+.post-content h2{margin-top:1rem}
+.post-content h3{margin-top:.8rem;color:#fff}
+.post-content p, .post-content li{line-height:1.8}
+.post-content ol, .post-content ul{padding-left:1.2rem}
+.post-content blockquote{
+  margin:.8rem 0;padding:.6rem .9rem;
+  border-left:4px solid var(--brand);
+  background:rgba(0,0,0,.22);color:#fff;border-radius:10px
+}
+.post-content code{
+  background:rgba(0,0,0,.35);
+  border:1px solid var(--border);
+  padding:.12rem .35rem;border-radius:6px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:.92em;color:#ffe58a
+}
+.post-content pre{
+  background:rgba(0,0,0,.35);border:1px solid var(--border);
+  padding:12px;border-radius:12px;overflow:auto
+}
+.post-content table{
+  width:100%;border-collapse:collapse;margin:.8rem 0;font-size:var(--fs-3)
+}
+.post-content th, .post-content td{
+  border:1px solid var(--border);padding:.55rem .6rem
+}
+.post-content tr:nth-child(odd){background:rgba(255,255,255,.03)}
+
+.post-nav{
+  display:flex;justify-content:space-between;gap:10px;margin-top:16px
+}
+.post-nav a{display:inline-block}
+
+/* ---------- Footer ---------- */
+footer.site-footer{
+  opacity:.92;text-align:center;padding:28px var(--gut);
+  font-size:var(--fs-3)
+}
+
+/* ---------- Responsive tweaks ---------- */
+@media (max-width:860px){
+  .brand img{width:140px}
+  .post-nav{flex-direction:column;align-items:flex-start}
+}
+
+/* ---------- Utility ---------- */
+.center{text-align:center}
+.muted{color:var(--muted)}
+hr{border:none;border-top:1px solid var(--border);margin:16px 0}
