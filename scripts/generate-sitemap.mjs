@@ -3,7 +3,9 @@ import path from "path";
 
 const ROOT = process.cwd();
 const EXCLUDE_DIRS = new Set([
-  "node_modules", ".git", ".netlify", "assets"
+  "node_modules", ".git", ".netlify", "assets",
+  "admin",           // ➜ JANGAN ikut di sitemap
+  "partials"         // ➜ JANGAN ikut di sitemap
 ]);
 const EXCLUDE_FILES = new Set(["404.html"]);
 
@@ -11,20 +13,16 @@ function toPosix(p){ return p.split(path.sep).join("/"); }
 
 function pathToUrlPath(rel){
   let p = toPosix(rel);
-  // hilangkan leading "./"
   if (p.startsWith("./")) p = p.slice(1);
-  // normalisasi index.html
   if (p === "index.html") return "/";
   if (p.endsWith("/index.html")) return "/" + p.replace(/\/index\.html$/, "/");
   return "/" + p;
 }
 
-// ambil base URL dari env Netlify; fallback domain produksimu
 function getBaseUrl(){
-  if (process.env.SITE_URL) return process.env.SITE_URL; // utamakan domain kanonik
   const ctx = process.env.CONTEXT || "";
   if (ctx === "production" && process.env.URL) return process.env.URL;
-  return process.env.DEPLOY_PRIME_URL || "https://original4d.store";
+  return process.env.DEPLOY_PRIME_URL || process.env.SITE_URL || "https://original4d.store";
 }
 
 async function walk(dir, list = []){
@@ -34,10 +32,18 @@ async function walk(dir, list = []){
     const rel = path.relative(ROOT, abs);
     const seg0 = rel.split(path.sep)[0];
     if (EXCLUDE_DIRS.has(seg0)) continue;
+
     if (e.isDirectory()){
       await walk(abs, list);
     } else if (e.isFile()){
       if (EXCLUDE_FILES.has(e.name)) continue;
+
+      // ➜ SKIP file verifikasi google *.html di root
+      //    (mis. google4f14a90dd181a8e9.html)
+      if (/^google[0-9a-f]+\.html$/i.test(e.name) && !rel.includes(path.sep)) {
+        continue;
+      }
+
       if (e.name.endsWith(".html")){
         list.push(rel);
       }
@@ -56,28 +62,28 @@ async function isNoIndex(htmlPath){
 }
 
 function iso(dt){
-  // sitemap pakai UTC ISO
   return new Date(dt).toISOString();
 }
 
 async function main(){
-  const baseUrl = getBaseUrl();
+  const baseUrl = getBaseUrl().replace(/\/+$/,"");
   const files = await walk(ROOT);
   const urls = [];
 
   for (const rel of files){
     const abs = path.join(ROOT, rel);
-    if (await isNoIndex(abs)) continue;                       // skip halaman noindex
+    if (await isNoIndex(abs)) continue; // hormati meta noindex
+
     const urlPath = pathToUrlPath(rel);
-    // optional: skip duplikat antara "/" dan "/index.html" (sudah dinormalisasi)
     const stat = await fs.stat(abs);
+
     urls.push({
-      loc: baseUrl.replace(/\/+$/, "") + urlPath,
+      loc: baseUrl + urlPath,
       lastmod: iso(stat.mtime)
     });
   }
 
-  // Urutkan biar rapi: root dulu, lalu alfabetis
+  // Root dulu, sisanya alfabetis
   urls.sort((a, b) => {
     if (a.loc === baseUrl + "/") return -1;
     if (b.loc === baseUrl + "/") return 1;
@@ -96,21 +102,33 @@ ${urls.map(u => `  <url>
 
   await fs.writeFile(path.join(ROOT, "sitemap.xml"), xml.trim() + "\n", "utf8");
 
-  // pastikan robots.txt ada & berisi lokasi sitemap
+  // ===== robots.txt: pastikan sitemap & disallow jalur non-index
   const robotsPath = path.join(ROOT, "robots.txt");
-  let robots = "User-agent: *\nAllow: /\n";
+  let robots = "";
   try{
     robots = await fs.readFile(robotsPath, "utf8");
-  }catch{/* tidak ada, pakai default */}
-
-  const sitemapLine = `Sitemap: ${baseUrl.replace(/\/+$/,"")}/sitemap.xml`;
-  if (!robots.includes("Sitemap:")){
-    robots = robots.trim() + "\n" + sitemapLine + "\n";
-  } else {
-    // update baris lama ke yang baru
-    robots = robots.replace(/Sitemap:\s*.*/i, sitemapLine);
+  }catch{
+    // default
+    robots = "User-agent: *\nAllow: /\n";
   }
-  await fs.writeFile(robotsPath, robots, "utf8");
+
+  const lines = robots.trim().split(/\r?\n/).filter(Boolean);
+  const want = [
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /admin/",
+    "Disallow: /partials/"
+  ];
+  // rebuild minimal + unique
+  const merged = new Map();
+  for (const l of [...want, ...lines]) merged.set(l.toLowerCase(), l);
+  const base = Array.from(merged.values()).join("\n");
+
+  const sitemapLine = `Sitemap: ${baseUrl}/sitemap.xml`;
+  const finalRobots = (base.includes("Sitemap:") ? base.replace(/Sitemap:\s*.*/i, sitemapLine)
+                                                 : base + "\n" + sitemapLine) + "\n";
+
+  await fs.writeFile(robotsPath, finalRobots, "utf8");
 
   console.log(`Generated sitemap with ${urls.length} URLs → sitemap.xml`);
 }
