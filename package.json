@@ -1,0 +1,8 @@
+{
+  "name": "original4d-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/generate-sitemap.mjs"
+  }
+}
