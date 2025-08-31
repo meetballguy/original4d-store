@@ -1,103 +1,57 @@
+// scripts/inject-partials.mjs
 import { promises as fs } from "fs";
 import path from "path";
 
 const ROOT = process.cwd();
-const TARGET_ROOT = path.join(ROOT, "blog");
-const PARTIALS = {
-  header: path.join(ROOT, "partials", "header.html"),
-  footer: path.join(ROOT, "partials", "footer.html"),
-};
+const PART_DIR = path.join(ROOT, "partials");
+const TARGET_DIRS = [path.join(ROOT, "blog")]; // injek hanya halaman blog
 
-function toPosix(p){ return p.split(path.sep).join("/"); }
-
-async function readPartial(p){
-  try {
-    const html = await fs.readFile(p, "utf8");
-    return html.trim();
-  } catch (e) {
-    throw new Error(`Gagal baca partial: ${p}\n${e.message}`);
-  }
+async function readPartial(name){
+  try { return await fs.readFile(path.join(PART_DIR, `${name}.html`), "utf8"); }
+  catch { return ""; }
 }
 
-async function walk(dir, list = []){
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  for (const e of entries){
-    const abs = path.join(dir, e.name);
-    if (e.isDirectory()){
-      await walk(abs, list);
-    } else if (e.isFile()){
-      if (e.name === "index.html") list.push(abs);
-    }
+async function* walk(dir){
+  for (const d of await fs.readdir(dir, { withFileTypes: true })){
+    const res = path.join(dir, d.name);
+    if (d.isDirectory()) yield* walk(res);
+    else if (d.isFile() && d.name.endsWith(".html")) yield res;
   }
-  return list;
-}
-
-function replaceOrInsertHeader(html, header){
-  const reHeader = /<header\b[\s\S]*?<\/header>/i;
-  if (reHeader.test(html)){
-    return html.replace(reHeader, header);
-  }
-  // sisipkan setelah <body>
-  const reBodyOpen = /<body[^>]*>/i;
-  if (reBodyOpen.test(html)){
-    return html.replace(reBodyOpen, m => `${m}\n${header}\n`);
-  }
-  return html; // fallback: biarin
-}
-
-function replaceOrInsertFooter(html, footer){
-  const reFooter = /<footer\b[\s\S]*?<\/footer>/i;
-  if (reFooter.test(html)){
-    return html.replace(reFooter, footer);
-  }
-  // sisipkan sebelum </body>
-  const reBodyClose = /<\/body>/i;
-  if (reBodyClose.test(html)){
-    return html.replace(reBodyClose, `\n${footer}\n</body>`);
-  }
-  return html; // fallback
-}
-
-function tidy(html){
-  // rapihkan spasi berlebih
-  return html.replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
 }
 
 async function main(){
-  // pastikan folder blog ada
-  try { await fs.access(TARGET_ROOT); }
-  catch { console.log("Folder /blog/ belum ada, lewati injeksi."); return; }
+  const header = await readPartial("header");
+  const footer = await readPartial("footer");
 
-  const header = await readPartial(PARTIALS.header);
-  const footer = await readPartial(PARTIALS.footer);
+  for (const base of TARGET_DIRS){
+    try { await fs.access(base); } catch { continue; }
+    for await (const file of walk(base)){
+      let html = await fs.readFile(file, "utf8");
 
-  const files = await walk(TARGET_ROOT);
-  let changed = 0;
+      if (header) {
+        if (html.includes("<!-- PARTIAL:HEADER -->")) {
+          html = html.replace("<!-- PARTIAL:HEADER -->", header);
+        } else if (/<header[\s\S]*?<\/header>/i.test(html)) {
+          html = html.replace(/<header[\s\S]*?<\/header>/i, header);
+        } else {
+          html = html.replace(/<body[^>]*>/i, m => `${m}\n${header}`);
+        }
+      }
 
-  for (const abs of files){
-    let html = await fs.readFile(abs, "utf8");
-    const before = html;
+      if (footer) {
+        if (html.includes("<!-- PARTIAL:FOOTER -->")) {
+          html = html.replace("<!-- PARTIAL:FOOTER -->", footer);
+        } else if (/<footer[\s\S]*?<\/footer>/i.test(html)) {
+          html = html.replace(/<footer[\s\S]*?<\/footer>/i, footer);
+        } else {
+          html = html.replace(/<\/body>/i, `${footer}\n</body>`);
+        }
+      }
 
-    html = replaceOrInsertHeader(html, header);
-    html = replaceOrInsertFooter(html, footer);
-    html = tidy(html);
-
-    if (html !== before){
-      await fs.writeFile(abs, html, "utf8");
-      changed++;
-      const rel = toPosix(path.relative(ROOT, abs));
-      console.log("Injected:", rel);
+      await fs.writeFile(file, html, "utf8");
     }
   }
-
-  if (changed === 0) {
-    console.log("Tidak ada file yang diubah (mungkin partial sudah terpasang).");
-  } else {
-    console.log(`Selesai injeksi partial → ${changed} file.`);
-  }
+  console.log("[inject-partials] Done");
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+main().catch(e => { console.error(e); process.exit(1); });
