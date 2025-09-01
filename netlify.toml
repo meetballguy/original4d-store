@@ -16,12 +16,18 @@
   status = 301
   force  = true
 
-# /amp.index.html -> /
+# /amp.index.html -> /amp (kanonikal)
 [[redirects]]
   from = "/amp.index.html"
   to   = "/amp"
   status = 301
   force  = true
+
+# /amp -> serve /amp.index.html (URL tetap /amp)
+[[redirects]]
+  from = "/amp"
+  to   = "/amp.index.html"
+  status = 200
 
 # http -> https
 [[redirects]]
@@ -92,8 +98,16 @@
     Content-Security-Policy   = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' data:; connect-src 'self'"
 
 # ===== CSP override khusus AMP =====
+# (Tetapkan untuk /amp.index.html agar aman jika masih ada akses langsung)
 [[headers]]
   for = "/amp.index.html"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; script-src 'self' https://cdn.ampproject.org; script-src-elem 'self' https://cdn.ampproject.org 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https://*.ampproject.org; frame-src https://*.youtube.com https://*.google.com"
+    Link = "<https://cdn.ampproject.org>; rel=preconnect; crossorigin"
+
+# (Tambahkan untuk path kanonik /amp agar header tetap terpasang saat rewrite 200)
+[[headers]]
+  for = "/amp"
   [headers.values]
     Content-Security-Policy = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; script-src 'self' https://cdn.ampproject.org; script-src-elem 'self' https://cdn.ampproject.org 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https: data:; connect-src 'self' https://*.ampproject.org; frame-src https://*.youtube.com https://*.google.com"
     Link = "<https://cdn.ampproject.org>; rel=preconnect; crossorigin"
@@ -119,6 +133,13 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# Tambahkan juga untuk /amp (kanonik)
+[[headers]]
+  for = "/amp"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# (Biarkan untuk /amp.index.html jika ada akses langsung)
 [[headers]]
   for = "/amp.index.html"
   [headers.values]
@@ -216,6 +237,3 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
-
-
-
