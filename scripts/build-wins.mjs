@@ -1,4 +1,4 @@
-// scripts/build-wins.mjs
+// scripts/build-posts.mjs
 import { promises as fs } from "fs";
 import path from "path";
 import matter from "gray-matter";
@@ -6,11 +6,15 @@ import { marked } from "marked";
 
 const ROOT = process.cwd();
 const CONTENT_DIR = path.join(ROOT, "content", "wins");
-const OUT_DIR = path.join(ROOT, "bukti");
+const OUT_DIR = path.join(ROOT, "bukti", "wins");
+
+// Pastikan SITE_URL diakhiri tanpa slash
 const SITE_URL = (process.env.SITE_URL?.replace(/\/+$/, "") || "https://original4d.store");
 const SITE_NAME = "Original4D";
 
+// ---------- Utils ----------
 const toPosix = (p) => p.split(path.sep).join("/");
+
 const slugify = (s) =>
   (s || "")
     .toString()
@@ -21,50 +25,97 @@ const slugify = (s) =>
     .replace(/-+/g, "-");
 
 function escapeHtml(s = "") {
-  return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+  return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
 }
-const toISO = (d) => (d ? new Date(d).toISOString() : null);
-const fmtID = (dISO) => dISO
-  ? new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(dISO))
-  : "";
 
-async function ensureDir(p) { await fs.mkdir(p, { recursive: true }); }
+// ISO normalizer (hapus millis agar rapi)
+function toISO(d) {
+  if (!d) return null;
+  const t = new Date(d);
+  if (isNaN(t)) return null;
+  return t.toISOString(); // sudah Zulu (UTC)
+}
 
-function jsonLdWinItem(item) {
-  // gunakan CreativeWork + ImageObject yang paling aman/generic
-  const obj = {
-    "@type": "CreativeWork",
-    "name": item.title,
-    "datePublished": item.dateISO || undefined,
-    "about": item.game || undefined,
-    "description": item.description || undefined,
-  };
-  if (item.proof_image) {
-    obj.image = { "@type": "ImageObject", "url": item.proof_image };
+function fmtID(dISO){
+  if (!dISO) return "";
+  try {
+    return new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(dISO));
+  } catch {
+    return dISO;
   }
-  // metadata privat tidak dimasukkan (member_mask & amount bisa dipakai di name/description)
-  return obj;
 }
 
 // ---------- Templates ----------
-function winDetailTemplate({ title, canonical, dateISO, amount, member_mask, game, description, bodyHtml, proof_image }) {
-  const safeTitle = escapeHtml(title);
-  const safeDesc = escapeHtml(description || "");
-  const ldArticle = {
+function buildJsonLdArticle({ title, description, canonical, dateISO, updatedISO, ogImage }) {
+  const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": safeTitle,
-    "url": canonical,
+    "@type": "Article",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": canonical },
+    "headline": title,
+    "datePublished": dateISO || undefined,
+    "dateModified": (updatedISO || dateISO) || undefined,
+    "author": { "@type": "Organization", "name": SITE_NAME },
+    "publisher": {
+      "@type": "Organization",
+      "name": SITE_NAME,
+      "logo": { "@type": "ImageObject", "url": `${SITE_URL}/assets/img/logo.png` }
+    },
+    "description": description || "",
+    ...(ogImage ? { "image": [ogImage] } : {})
   };
-  const ldBreadcrumb = {
+  return `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
+}
+
+function buildJsonLdBreadcrumb({ canonical, title }) {
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Beranda", "item": `${SITE_URL}/` },
-      { "@type": "ListItem", "position": 2, "name": "Bukti Kemenangan", "item": `${SITE_URL}/bukti/` },
-      { "@type": "ListItem", "position": 3, "name": safeTitle, "item": canonical }
+      { "@type": "ListItem", "position": 2, "name": "bukti", "item": `${SITE_URL}/bukti/` },
+      { "@type": "ListItem", "position": 3, "name": title, "item": canonical }
     ]
   };
+  return `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
+}
+
+function articleTemplate({
+  title,
+  description,
+  canonical,
+  dateISO,
+  updatedISO,
+  bodyHtml,
+  ogImage,
+  ogImageAlt,
+  ogImageWidth,
+  ogImageHeight,
+  section,
+  tags
+}) {
+  const safeTitle = escapeHtml(title);
+  const safeDesc = escapeHtml(description || "");
+  const datePubISO = dateISO || "";
+  const dateModISO = updatedISO || dateISO || "";
+
+  const ldArticle = buildJsonLdArticle({ title, description, canonical, dateISO, updatedISO, ogImage });
+  const ldBreadcrumb = buildJsonLdBreadcrumb({ canonical, title });
+
+  // OG image extras
+  const ogImgTags = [];
+  if (ogImage) ogImgTags.push(`<meta property="og:image" content="${ogImage}">`);
+  if (ogImageAlt) ogImgTags.push(`<meta property="og:image:alt" content="${escapeHtml(ogImageAlt)}">`);
+  if (ogImageWidth) ogImgTags.push(`<meta property="og:image:width" content="${String(ogImageWidth)}">`);
+  if (ogImageHeight) ogImgTags.push(`<meta property="og:image:height" content="${String(ogImageHeight)}">`);
+
+  // Article extras
+  const articleExtras = [];
+  if (section) articleExtras.push(`<meta property="article:section" content="${escapeHtml(section)}">`);
+  if (Array.isArray(tags)) {
+    for (const t of tags) {
+      articleExtras.push(`<meta property="article:tag" content="${escapeHtml(String(t))}">`);
+    }
+  }
 
   return `<!doctype html>
 <html lang="id">
@@ -73,27 +124,57 @@ function winDetailTemplate({ title, canonical, dateISO, amount, member_mask, gam
   <title>${safeTitle}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="${safeDesc}">
-  <meta name="robots" content="index,follow">
   <link rel="canonical" href="${canonical}">
-
+  <meta name="robots" content="index,follow">
+  <meta name="copyright" content="Original4D" />
+  <meta name="author" content="Original4D" />
+  <meta name="distribution" content="global" />
+  <meta name="publisher" content="Original4D" />
+  <meta name="geo.country" content="ID" />
+  <meta name="tgn.nation" content="Indonesia" />
+  <meta name="googlebot" content="index,follow" />
+  <meta name="Googlebot-Image" content="follow, all" />
+  <meta name="Scooter" content="follow, all" />
+  <meta name="msnbot" content="follow, all" />
+  <meta name="alexabot" content="follow, all" />
+  <meta name="Slurp" content="follow, all" />
+  <meta name="ZyBorg" content="follow, all" />
+  <meta name="bingbot" content="follow, all" />
+  <meta name="MSSmartTagsPreventParsing" content="true" />
+  <meta name="audience" content="all" />
+  <meta name="geo.region" content="ID-JK" />
+  <meta name="geo.placename" content="Jakarta Special Capital Region" />
+  
+  <!-- Performance: preconnect/preload -->
+  <link rel="preload" href="/assets/css/blog.css" as="style">
+  <link rel="alternate" type="application/json" href="/bukti/feed.json">
+  <link rel="alternate" type="application/rss+xml" href="/bukti/feed.xml">
+  
+  <!-- Open Graph -->
+  <meta property="article:section" content="News">
+  <meta property="article:tag" content="Verifikasi">
+  <meta property="article:tag" content="Original4D">
   <meta property="og:locale" content="id_ID">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="${SITE_NAME}">
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
   <meta property="og:url" content="${canonical}">
-  ${proof_image ? `<meta property="og:image" content="${proof_image}">` : ""}
+  ${ogImgTags.join("\n  ")}
+  <meta property="article:published_time" content="${datePubISO}">
+  <meta property="article:modified_time" content="${dateModISO}">
+  ${articleExtras.join("\n  ")}
 
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${safeTitle}">
   <meta name="twitter:description" content="${safeDesc}">
-  ${proof_image ? `<meta name="twitter:image" content="${proof_image}">` : ""}
+  ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ""}
 
-  <script type="application/ld+json">${JSON.stringify(ldBreadcrumb)}</script>
-  <script type="application/ld+json">${JSON.stringify(ldArticle)}</script>
+  ${ldBreadcrumb}
+  ${ldArticle}
 
   <link rel="icon" href="${SITE_URL}/assets/img/favicon.png" type="image/png">
-  <link rel="preload" href="/assets/css/blog.css" as="style">
   <link rel="stylesheet" href="/assets/css/blog.css">
 </head>
 <body>
@@ -101,132 +182,19 @@ function winDetailTemplate({ title, canonical, dateISO, amount, member_mask, gam
 
   <main class="container">
     <nav class="crumb" aria-label="Breadcrumb">
-      <a href="/">Beranda</a> › <a href="/bukti/">Bukti Kemenangan</a> › <strong>${safeTitle}</strong>
+      <a href="/">Beranda</a> › <a href="/bukti/">bukti</a> › <strong>${safeTitle}</strong>
     </nav>
 
     <article class="post">
       <h1>${safeTitle}</h1>
       <div class="post-meta">
-        ${dateISO ? `<time datetime="${dateISO}">Tanggal: ${fmtID(dateISO)}</time>` : ""}
-        ${amount ? ` • <span>Menang: Rp ${Number(amount).toLocaleString("id-ID")}</span>` : ""}
-        ${member_mask ? ` • <span>Member: ${escapeHtml(member_mask)}</span>` : ""}
-        ${game ? ` • <span>Game: ${escapeHtml(game)}</span>` : ""}
+        ${datePubISO ? `<time datetime="${datePubISO}">Terbit: ${fmtID(datePubISO)}</time>` : ""}
+        ${dateModISO ? ` • <time datetime="${dateModISO}">Update: ${fmtID(dateModISO)}</time>` : ""}
       </div>
-
-      ${proof_image ? `<figure class="win-proof"><img src="${proof_image}" alt="${safeTitle}" loading="lazy" decoding="async"></figure>` : ""}
-
-      ${safeDesc ? `<p>${safeDesc}</p>` : ""}
-
       <div class="post-body">
-        ${bodyHtml || ""}
+        ${bodyHtml}
       </div>
-
-      <nav class="post-nav"><a href="/bukti/">← Kembali ke daftar</a></nav>
-    </article>
-  </main>
-
-  <!-- PARTIAL:FOOTER -->
-</body>
-</html>`;
-}
-
-function winsIndexTemplate({ canonical, items }) {
-  const safeTitle = "Bukti Kemenangan Member";
-  const safeDesc = "Kumpulan bukti kemenangan member Original4D (screenshots dan ringkasan). ID member dimasking demi privasi.";
-
-  // JSON-LD: CollectionPage + ItemList
-  const ldCollection = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": safeTitle,
-    "url": canonical,
-    "about": "Bukti kemenangan member",
-  };
-  const ldItemList = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "itemListElement": items.map((it, idx) => ({
-      "@type": "ListItem",
-      "position": idx + 1,
-      "url": it.url,
-      "item": jsonLdWinItem(it)
-    }))
-  };
-
-  const cards = items.map(it => {
-    const amount = it.amount ? `Rp ${Number(it.amount).toLocaleString("id-ID")}` : "";
-    return `<a class="card-win" href="${it.url}">
-      <div class="thumb">${it.proof_image ? `<img src="${it.proof_image}" alt="${escapeHtml(it.title)}" loading="lazy" decoding="async">` : ""}</div>
-      <div class="meta">
-        <h3>${escapeHtml(it.title)}</h3>
-        <div class="sub">
-          ${it.dateISO ? `<time datetime="${it.dateISO}">${fmtID(it.dateISO)}</time>` : ""}
-          ${amount ? ` • <span>${amount}</span>` : ""}
-          ${it.member_mask ? ` • <span>${escapeHtml(it.member_mask)}</span>` : ""}
-        </div>
-      </div>
-    </a>`;
-  }).join("\n");
-
-  return `<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8">
-  <title>${safeTitle}</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="${safeDesc}">
-  <meta name="robots" content="index,follow">
-  <link rel="canonical" href="${canonical}">
-
-  <meta property="og:locale" content="id_ID">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="${SITE_NAME}">
-  <meta property="og:title" content="${safeTitle}">
-  <meta property="og:description" content="${safeDesc}">
-  <meta property="og:url" content="${canonical}">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${safeTitle}">
-  <meta name="twitter:description" content="${safeDesc}">
-
-  <script type="application/ld+json">${JSON.stringify(ldCollection)}</script>
-  <script type="application/ld+json">${JSON.stringify(ldItemList)}</script>
-
-  <link rel="icon" href="${SITE_URL}/assets/img/favicon.png" type="image/png">
-  <link rel="preload" href="/assets/css/blog.css" as="style">
-  <link rel="stylesheet" href="/assets/css/blog.css">
-  <style>
-    /* grid sederhana untuk kartu bukti */
-    .grid-wins { display:grid; gap:16px; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); }
-    .card-win { display:block; border:1px solid rgba(0,0,0,.08); border-radius:12px; overflow:hidden; text-decoration:none; background:#fff; }
-    .card-win .thumb { aspect-ratio: 16/9; background:#f2f4f8; display:grid; place-items:center; }
-    .card-win .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-    .card-win .meta { padding:12px; color:#0b1220; }
-    .card-win h3 { margin:0 0 6px; font-size:16px; line-height:1.35; color:#0b1220; }
-    .card-win .sub { font-size:12px; color:#475569; }
-    @media (prefers-color-scheme: dark) {
-      .card-win { background:#0f172a; border-color: rgba(255,255,255,.12); }
-      .card-win .meta { color:#e5e7eb; }
-      .card-win h3 { color:#e5e7eb; }
-      .card-win .sub { color:#94a3b8; }
-    }
-  </style>
-</head>
-<body>
-  <!-- PARTIAL:HEADER -->
-
-  <main class="container">
-    <nav class="crumb" aria-label="Breadcrumb">
-      <a href="/">Beranda</a> › <strong>Bukti Kemenangan</strong>
-    </nav>
-
-    <article class="post">
-      <h1>Bukti Kemenangan Member</h1>
-      <p>Kumpulan screenshot/foto kemenangan member Original4D. ID dimasking untuk menjaga privasi.</p>
-
-      <div class="grid-wins">
-        ${cards}
-      </div>
+      <nav class="post-nav"><a href="/bukti/">← Artikel lain</a></nav>
     </article>
   </main>
 
@@ -236,67 +204,70 @@ function winsIndexTemplate({ canonical, items }) {
 }
 
 // ---------- Build ----------
-async function buildDetail(mdPath) {
+async function ensureDir(p){ await fs.mkdir(p, { recursive: true }); }
+
+async function buildOne(mdPath){
   const raw = await fs.readFile(mdPath, "utf8");
   const { data: fm, content } = matter(raw);
+
+  // Draft → skip
   if (fm.draft) return null;
 
-  const title = fm.title || "Bukti Kemenangan";
+  const title = fm.title || "Tanpa Judul";
+  const description = fm.description || "";
+
+  // Slug & output path
   const baseSlug = fm.slug ? slugify(fm.slug) : slugify(path.basename(mdPath, ".md"));
   const outDir = path.join(OUT_DIR, baseSlug);
-  const canonical = `${SITE_URL}/bukti/${baseSlug}/`;
+  const canonical = `${SITE_URL}/bukti/wins/${baseSlug}/`;
 
+  // Tanggal
   const dateISO = toISO(fm.date);
-  const amount = fm.amount || null;
-  const member_mask = fm.member_mask || null;
-  const game = fm.game || null;
-  const description = fm.description || "";
-  const proof_image = fm.proof_image || "";
+  const updatedISO = toISO(fm.updated);
 
+  // Render Markdown → HTML
   const bodyHtml = marked.parse(content || "");
 
-  const html = winDetailTemplate({
-    title, canonical, dateISO, amount, member_mask, game, description, bodyHtml, proof_image
+  // OG image + extras
+  const ogImage = fm.ogImage || `${SITE_URL}/assets/img/hero.webp`;
+  const ogImageAlt = fm.ogImageAlt || title;
+  const ogImageWidth = fm.ogImageWidth || null;
+  const ogImageHeight = fm.ogImageHeight || null;
+
+  const html = articleTemplate({
+    title,
+    description,
+    canonical,
+    dateISO,
+    updatedISO,
+    bodyHtml,
+    ogImage,
+    ogImageAlt,
+    ogImageWidth,
+    ogImageHeight,
+    section: fm.section || null,
+    tags: fm.tags || null
   });
 
   await ensureDir(outDir);
   await fs.writeFile(path.join(outDir, "index.html"), html, "utf8");
 
-  return {
-    title,
-    url: `/bukti/${baseSlug}/`,
-    dateISO,
-    amount,
-    member_mask,
-    game,
-    description,
-    proof_image
-  };
+  return { slug: baseSlug, path: toPosix(path.relative(ROOT, path.join(outDir, "index.html"))) };
 }
 
-async function buildIndex(items) {
-  const canonical = `${SITE_URL}/bukti/`;
-  // urut terbaru–terlama
-  const sorted = items.slice().sort((a,b) => (b.dateISO || "").localeCompare(a.dateISO || ""));
-  const html = winsIndexTemplate({ canonical, items: sorted });
-  await ensureDir(OUT_DIR);
-  await fs.writeFile(path.join(OUT_DIR, "index.html"), html, "utf8");
-}
-
-async function main() {
+async function main(){
   try { await fs.access(CONTENT_DIR); } catch { await ensureDir(CONTENT_DIR); }
 
   const files = (await fs.readdir(CONTENT_DIR))
     .filter(f => f.endsWith(".md"))
     .map(f => path.join(CONTENT_DIR, f));
 
-  const items = [];
-  for (const f of files) {
-    const item = await buildDetail(f);
-    if (item) items.push(item);
+  const results = [];
+  for (const f of files){
+    const r = await buildOne(f);
+    if (r) results.push(r);
   }
-  await buildIndex(items);
-  console.log(`[build-wins] Rendered ${items.length} item(s) from ${toPosix(path.relative(ROOT, CONTENT_DIR))}`);
+  console.log(`[build-posts] Rendered ${results.length} article(s) from ${toPosix(path.relative(ROOT, CONTENT_DIR))}`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
