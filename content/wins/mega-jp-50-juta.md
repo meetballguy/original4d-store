@@ -4,12 +4,12 @@ date: 2025-08-28T14:10:00.000Z
 amount: 50000000
 member_mask: YU***21
 game: Slot — Gates of Olympus
-proof_image: /assets/img/wins/mega-jp-50-juta.webp
+proof_image: /assets/img/mega-jp-50-juta.png
 description: Kemenangan besar member YU***21 pada permainan Gates of Olympus.
 draft: false
 slug: mega-jp-50-juta
 ---
-![Bukti kemenangan Mega JP 50 Juta di Gates of Olympus](/assets/img/wins/mega-jp-50-juta.webp)
+![Bukti kemenangan Mega JP 50 Juta di Gates of Olympus](/assets/img/mega-jp-50-juta.png)
 
 **Catatan:** pembayaran selesai dalam ±3 menit setelah proses verifikasi.
 ---
