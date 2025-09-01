@@ -17,9 +17,28 @@ collections:
     format: "frontmatter"
     fields:
       - { name: "title", label: "Judul", widget: "string" }
-      - { name: "description", label: "Deskripsi", widget: "text", hint: "Max ~160 karakter" }
+      - { name: "description", label: "Deskripsi", widget: "text" }
       - { name: "date", label: "Tanggal Terbit", widget: "datetime" }
       - { name: "updated", label: "Tanggal Update", widget: "datetime", required: false }
       - { name: "draft", label: "Draft?", widget: "boolean", default: false }
-      - { name: "slug", label: "Slug (opsional)", widget: "string", required: false, hint: "Kosongkan untuk pakai nama file" }
+      - { name: "slug", label: "Slug (opsional)", widget: "string", required: false }
       - { name: "body", label: "Konten", widget: "markdown" }
+
+  - name: "wins"
+    label: "Bukti Kemenangan"
+    folder: "content/wins"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    fields:
+      - { name: "title", label: "Judul", widget: "string", hint: "Contoh: Mega JP 50 Juta" }
+      - { name: "date", label: "Tanggal", widget: "datetime" }
+      - { name: "amount", label: "Nominal Menang (angka)", widget: "number", value_type: "int", min: 1 }
+      - { name: "member_mask", label: "ID Member (masking)", widget: "string", hint: "Contoh: YU***21" }
+      - { name: "game", label: "Game/Produk", widget: "string" }
+      - { name: "proof_image", label: "Screenshot/Foto Bukti", widget: "image", media_folder: "assets/uploads/wins", public_folder: "/assets/uploads/wins" }
+      - { name: "description", label: "Deskripsi Singkat", widget: "text", required: false }
+      - { name: "draft", label: "Draft?", widget: "boolean", default: false }
+      - { name: "slug", label: "Slug (opsional)", widget: "string", required: false, hint: "Kosongkan untuk otomatis" }
+      - { name: "body", label: "Catatan Tambahan (opsional)", widget: "markdown", required: false }
