@@ -16,6 +16,13 @@
   status = 301
   force  = true
 
+# /amp.index.html -> /
+[[redirects]]
+  from = "/amp.index.html"
+  to   = "/amp"
+  status = 301
+  force  = true
+
 # http -> https
 [[redirects]]
   from = "http://original4d.store/*"
@@ -209,5 +216,6 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
 
 
