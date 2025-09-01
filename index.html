@@ -348,6 +348,8 @@
 
   <!-- Main -->
   <main>
+
+    <!-- HERO: 2 kolom rapi -->
     <section class="hero container">
       <div class="card media-card">
         <!-- 600:350 ≈ 12:7 — kunci rasio supaya stabil -->
@@ -369,31 +371,6 @@
         </figure>
       </div>
 
-<section class="container card" aria-label="Artikel Terbaru" id="latest"></section>
-  <script type="module">
-  (async () => {
-    try {
-      const res = await fetch('/blog/feed.json', { cache:'no-store' });
-      const feed = await res.json();
-      const items = (feed.items || []).slice(0,4);
-      const el = document.querySelector('#latest');
-      if (!el || !items.length) return;
-      el.innerHTML = `
-        <h2 style="margin:0 0 8px;color:#fff;font-size:var(--fs-2)">Artikel Terbaru</h2>
-        <div class="grid-2">
-          ${items.map(i=>`
-            <article class="card">
-              <h3 style="margin:0"><a href="${i.url}" rel="follow">${i.title}</a></h3>
-              <div class="meta">${new Date(i.date_modified || i.date_published || Date.now()).toLocaleDateString('id-ID')}</div>
-              <p class="desc">${(i.summary||'').slice(0,140)}${(i.summary||'').length>140?'…':''}</p>
-              <a class="btn" href="${i.url}">Baca</a>
-            </article>
-          `).join('')}
-        </div>`;
-    } catch(e) { /* silent */ }
-  })();
-  </script>
-
       <div class="card">
         <h1>Original4D - Situs Resmi & Terpercaya</h1>
         <p>Selamat datang di portal brand Original4D. Halaman ini dibuat ringan dan aman agar kamu mudah menemukan tautan resmi. Tekan tombol di bawah untuk menuju platform utama.</p>
@@ -404,7 +381,21 @@
       </div>
     </section>
 
-    <section class="container grid-2" aria-label="Info Brand">
+    <!-- ARTIKEL TERBARU: section tersendiri (bukan di grid hero) -->
+    <section class="container card" aria-label="Artikel Terbaru" style="margin-top:var(--space)">
+      <h2 style="margin:0 0 8px;color:#fff;font-size:var(--fs-2)">Artikel Terbaru</h2>
+      <div id="latest" class="grid-2" role="list">
+        <!-- akan diisi lewat JS -->
+      </div>
+      <noscript>
+        <ul>
+          <li><a href="/blog/news/cara-daftar-original4d/">Cara Daftar Original4D (Panduan Lengkap 2025)</a></li>
+        </ul>
+      </noscript>
+    </section>
+
+    <!-- INFO BRAND -->
+    <section class="container grid-2" aria-label="Info Brand" style="margin-top:var(--space)">
       <div class="card">
         <h2 style="margin:0 0 8px;color:#fff;font-size:var(--fs-2)">Kenapa Original4D?</h2>
         <p>Akses cepat, dukungan resmi, dan tautan yang tervalidasi. Simpan domain ini: <strong>original4d.store</strong> agar mudah ditemukan ketika mencari brand Original4D.</p>
@@ -415,6 +406,7 @@
       </div>
     </section>
 
+    <!-- FAQ -->
     <section class="container card" style="margin-top:var(--space)" aria-label="FAQ">
       <h2 style="margin:0 0 8px;color:#fff;font-size:var(--fs-2)">FAQ</h2>
       <details>
@@ -430,13 +422,6 @@
         <p>Klik tombol Login di bagian atas atau tombol Login, lalu ikuti petunjuk di platform utama.</p>
       </details>
     </section>
-<section class="container card" aria-label="Terbaru di Blog" style="margin-top:var(--space)">
-  <h2 style="margin:0 0 8px;color:#fff;font-size:var(--fs-2)">Terbaru di Blog</h2>
-  <ul>
-    <li><a href="/blog/news/cara-daftar-original4d/">Cara Daftar Original4D (Panduan Lengkap 2025)</a></li>
-    <!-- tambah item baru tiap ada artikel -->
-  </ul>
-</section>
 
   </main>
 
@@ -450,9 +435,43 @@
   </footer>
 
   <!-- Minimal JS -->
-<script src="/assets/js/main.js"></script>
+  <script src="/assets/js/main.js"></script>
+
+  <!-- Artikel Terbaru (fetch feed.json) -->
+  <script type="module">
+    (async () => {
+      const wrap = document.getElementById('latest');
+      if (!wrap) return;
+      try {
+        const res = await fetch('/blog/feed.json', { cache:'no-store' });
+        const feed = await res.json();
+        const items = (feed.items || []).slice(0, 4);
+        if (!items.length) {
+          wrap.innerHTML = '<p class="desc">Belum ada artikel.</p>';
+          return;
+        }
+        const fmt = new Intl.DateTimeFormat('id-ID', { dateStyle:'medium' });
+        wrap.innerHTML = items.map(i => {
+          const date = i.date_modified || i.date_published || Date.now();
+          const summary = (i.summary || '').trim();
+          const short = summary.length > 140 ? summary.slice(0,140) + '…' : summary;
+          return `
+            <article class="card" role="listitem">
+              <h3 style="margin:0"><a href="${i.url}">${i.title}</a></h3>
+              <div class="meta">${fmt.format(new Date(date))}</div>
+              <p class="desc">${short || 'Baca selengkapnya.'}</p>
+              <p><a class="btn" href="${i.url}">Baca</a></p>
+            </article>
+          `;
+        }).join('');
+      } catch(e) {
+        wrap.innerHTML = '<p class="desc">Gagal memuat artikel terbaru.</p>';
+      }
+    })();
+  </script>
 </body>
 </html>
+
 
 
 
