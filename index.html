@@ -396,6 +396,17 @@
       </noscript>
     </section>
 
+    <!-- BUKTI TERBARU -->
+    <section class="container card" aria-label="Bukti Terbaru" style="margin-top:var(--space)">
+      <h2 style="margin:0 0 8px;color:#fff;font-size:var(--fs-2)">Bukti Terbaru</h2>
+      <div id="latestWins" class="grid-2" role="list">
+        <!-- diisi via JS -->
+      </div>
+      <noscript>
+        <p class="desc">Aktifkan JavaScript untuk melihat bukti terbaru.</p>
+      </noscript>
+    </section>
+
     <!-- INFO BRAND -->
     <section class="container grid-2" aria-label="Info Brand" style="margin-top:var(--space)">
       <div class="card">
@@ -438,41 +449,12 @@
 
   <!-- Minimal JS -->
   <script src="/assets/js/main.js"></script>
-
-  <!-- Artikel Terbaru (fetch feed.json) -->
-  <script type="module">
-    (async () => {
-      const wrap = document.getElementById('latest');
-      if (!wrap) return;
-      try {
-        const res = await fetch('/blog/feed.json', { cache:'no-store' });
-        const feed = await res.json();
-        const items = (feed.items || []).slice(0, 4);
-        if (!items.length) {
-          wrap.innerHTML = '<p class="desc">Belum ada artikel.</p>';
-          return;
-        }
-        const fmt = new Intl.DateTimeFormat('id-ID', { dateStyle:'medium' });
-        wrap.innerHTML = items.map(i => {
-          const date = i.date_modified || i.date_published || Date.now();
-          const summary = (i.summary || '').trim();
-          const short = summary.length > 140 ? summary.slice(0,140) + '…' : summary;
-          return `
-            <article class="card" role="listitem">
-              <h3 style="margin:0"><a href="${i.url}">${i.title}</a></h3>
-              <div class="meta">${fmt.format(new Date(date))}</div>
-              <p class="desc">${short || 'Baca selengkapnya.'}</p>
-              <p><a class="btn" href="${i.url}">Baca</a></p>
-            </article>
-          `;
-        }).join('');
-      } catch(e) {
-        wrap.innerHTML = '<p class="desc">Gagal memuat artikel terbaru.</p>';
-      }
-    })();
-  </script>
+  <script type="module" src="/assets/js/home-blog.js"></script>
+  <script type="module" src="/assets/js/home-wins.js"></script>
+  
 </body>
 </html>
+
 
 
 
