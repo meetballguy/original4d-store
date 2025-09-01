@@ -45,26 +45,6 @@
   status = 301
   force  = true
 
-# Pola link yang kamu minta: /bukti/wins/:slug.md -> /bukti/:slug/
-[[redirects]]
-  from = "/bukti/wins/:slug.md"
-  to   = "/bukti/:slug/"
-  status = 301
-  force  = true
-
-# Guard tambahan (kalau ada yang pakai tanpa .md atau langsung di /bukti/)
-[[redirects]]
-  from = "/bukti/wins/:slug"
-  to   = "/bukti/:slug/"
-  status = 301
-  force  = true
-
-[[redirects]]
-  from = "/bukti/:slug.md"
-  to   = "/bukti/:slug/"
-  status = 301
-  force  = true
-
 # Pagination: tanpa slash -> berslash (blog)
 [[redirects]]
   from   = "/blog/page/:page"
@@ -229,4 +209,5 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
 
