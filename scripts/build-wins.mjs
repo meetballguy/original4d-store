@@ -122,6 +122,8 @@ function articleTemplateWins({ title, description, canonical, dateISO, updatedIS
 
   <link rel="icon" href="${SITE_URL}/assets/img/favicon.png" type="image/png">
   <link rel="stylesheet" href="/assets/css/blog.css">
+  <link rel="alternate" type="application/json" href="/blog/feed.json">
+  <link rel="alternate" type="application/rss+xml" href="/blog/feed.xml">
 </head>
 <body>
   <!-- PARTIAL:HEADER -->
