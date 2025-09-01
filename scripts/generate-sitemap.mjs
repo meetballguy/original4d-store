@@ -6,7 +6,7 @@ import matter from "gray-matter";
 const ROOT = process.cwd();
 const MANIFEST_PATH = path.join(ROOT, ".sitemap-manifest.json"); // simpan state lastmod/changefreq/priority
 const FREEZE_EXISTING = process.env.SITEMAP_FREEZE_EXISTING !== "0"; // default freeze = true
-const PING_AFTER_BUILD = process.env.SITEMAP_PING === "1"; // set "1" untuk ping Google (+ IndexNow jika KEY ada)
+const PING_AFTER_BUILD = process.env.CONTEXT === "production" && process.env.SITEMAP_PING === "1";
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || ""; // opsional: jika pakai IndexNow
 
 // ========= Exclusions =========
