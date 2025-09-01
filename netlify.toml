@@ -52,6 +52,26 @@
   status = 301
   force  = true
 
+# Guard tambahan (kalau ada yang pakai tanpa .md atau langsung di /bukti/)
+[[redirects]]
+  from = "/bukti/wins/:slug"
+  to   = "/bukti/:slug/"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "/bukti/:slug.md"
+  to   = "/bukti/:slug/"
+  status = 301
+  force  = true
+
+# (Opsional) jaga kalau ada yang akses /blog/news/slug.html
+[[redirects]]
+  from = "/blog/news/:slug.html"
+  to   = "/blog/news/:slug/"
+  status = 301
+  force  = true
+
 # Pagination: tanpa slash -> berslash (blog)
 [[redirects]]
   from   = "/blog/page/:page"
@@ -88,8 +108,8 @@
     X-Frame-Options           = "SAMEORIGIN"
     Referrer-Policy           = "strict-origin-when-cross-origin"
     Permissions-Policy        = "geolocation=(), microphone=(), camera=(), browsing-topics=()"
-    # Izinkan inline script/style & inline event handlers (but tetap 'self' untuk sumber)
-    Content-Security-Policy   = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'"
+    # Perluas img-src ke https: dan blob: agar gambar tampil di preview/varian domain
+    Content-Security-Policy   = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' data:; connect-src 'self'"
 
 # ===== CSP override khusus AMP =====
 [[headers]]
@@ -216,9 +236,3 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
-
-
-
-
-
-
