@@ -1,3 +1,18 @@
+---
+title: Mega JP 50 Juta
+date: 2025-08-28T14:10:00.000Z
+amount: 50000000
+member_mask: YU***21
+game: Slot — Gates of Olympus
+proof_image: /assets/img/wins/mega-jp-50-juta.webp
+description: Kemenangan besar member YU***21 pada permainan Gates of Olympus.
+draft: false
+slug: mega-jp-50-juta
+---
+![Bukti kemenangan Mega JP 50 Juta di Gates of Olympus](/assets/img/wins/mega-jp-50-juta.webp)
+
+**Catatan:** pembayaran selesai dalam ±3 menit setelah proses verifikasi.
+---
 # Ucapan Selamat! Member Original4D YU***21 Raih Mega JP 50 Juta di Gates of Olympus
 
 Original4D kembali menghadirkan kabar bahagia dari salah satu member setianya. Kali ini, seorang pemain dengan ID **YU***21 berhasil meraih kemenangan spektakuler berupa **Jackpot Mega sebesar Rp 50.000.000** di permainan populer *Slot — Gates of Olympus*. Kemenangan ini menjadi bukti nyata bahwa bermain di platform Original4D bukan hanya sekadar hiburan, melainkan juga kesempatan emas untuk membawa pulang hadiah fantastis.
