@@ -238,11 +238,9 @@
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
       
-# ===== Anti-Indeks Preview =====
-[context.deploy-preview]
-  [[context.deploy-preview.headers]]
-    for = "/*"
-    [context.deploy-preview.headers.values]
-      X-Robots-Tag = "noindex, nofollow"
+[[edge_functions]]
+  path = "/:key.txt"
+  function = "indexnow-key"
+
 
 
