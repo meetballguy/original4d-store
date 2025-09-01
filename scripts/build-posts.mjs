@@ -151,6 +151,9 @@ function articleTemplate({
   <link rel="alternate" type="application/rss+xml" href="/blog/feed.xml">
   
   <!-- Open Graph -->
+  <meta property="article:section" content="News">
+  <meta property="article:tag" content="Verifikasi">
+  <meta property="article:tag" content="Original4D">
   <meta property="og:locale" content="id_ID">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="${SITE_NAME}">
