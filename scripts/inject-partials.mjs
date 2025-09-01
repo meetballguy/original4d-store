@@ -5,6 +5,7 @@ import path from "path";
 const ROOT = process.cwd();
 const PART_DIR = path.join(ROOT, "partials");
 const TARGET_DIRS = [path.join(ROOT, "blog")]; // injek hanya halaman blog
+const TARGET_DIRS = [path.join(ROOT, "bukti")]; // injek hanya halaman bukti
 
 async function readPartial(name) {
   try {
