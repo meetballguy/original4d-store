@@ -238,9 +238,12 @@
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
       
+# Jalankan Edge Function untuk semua *.txt (termasuk key IndexNow)
 [[edge_functions]]
 function = "indexnow-key"
-path = "/c2e5ea486cc94b7a9be78d4cd25c26b0.txt"
+path = "/:file.txt"
+
+
 
 
 
