@@ -1,23 +1,184 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Admin — Original4D</title>
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Favicon (placeholder) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230ea5e9'/%3E%3Ctext x='32' y='38' font-size='26' text-anchor='middle' fill='white' font-family='Arial'%3EO4%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg: #0b1020;          /* dark base */
+      --bg-2: #0f172a;        /* slate */
+      --card: rgba(255,255,255,.06);
+      --text: #e5e7eb;        /* gray-200 */
+      --muted: #94a3b8;       /* slate-400 */
+      --brand: #0ea5e9;       /* sky-500 */
+      --brand-2: #22d3ee;     /* cyan-400 */
+      --ring: rgba(34,211,238,.35);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --bg-2: #e2e8f0;
+        --card: rgba(255,255,255,.9);
+        --text: #0b1220;
+        --muted: #475569;
+        --ring: rgba(14,165,233,.2);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial, sans-serif;
+      color: var(--text); background: radial-gradient(1200px 600px at 10% -10%, rgba(34,211,238,.20), transparent 60%),
+                         radial-gradient(900px 500px at 110% 10%, rgba(14,165,233,.18), transparent 55%), var(--bg);
+    }
+    /* Header */
+    .nav {
+      position: fixed; inset: 0 0 auto; height: 64px; display: flex; align-items: center; padding: 0 20px; 
+      backdrop-filter: blur(8px); background: linear-gradient(to bottom, rgba(2,6,23,.75), transparent);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .brand { display:inline-flex; gap:10px; align-items:center; font-weight:700; letter-spacing: .2px; }
+    .logo { width:28px; height:28px; border-radius:8px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); display:grid; place-items:center; box-shadow: var(--shadow);}
+    .logo span { font-size: 14px; color:white; }
+
+    /* Splash / Login shell */
+    .wrap { min-height: 100%; display: grid; place-items: center; padding: 88px 20px 24px; }
+    .card {
+      width: 100%; max-width: 760px; background: var(--card); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px; box-shadow: var(--shadow);
+      display: grid; grid-template-columns: 1.2fr 1fr; overflow: hidden;
+    }
+    @media (max-width: 860px) { .card { grid-template-columns: 1fr; } }
+
+    .card-hero {
+      padding: 28px; position: relative; isolation: isolate; background:
+        radial-gradient(400px 160px at 15% 15%, rgba(34,211,238,.25), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.04), transparent 45%);
+      border-right: 1px solid rgba(255,255,255,.06);
+    }
+    .card-hero h1 { margin: 8px 0 6px; font-size: clamp(22px, 3vw, 28px); }
+    .card-hero p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .badges { display:flex; gap:10px; margin-top:14px; flex-wrap: wrap; }
+    .badge { font-size: 12px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); }
+
+    .card-cta { padding: 28px; display: grid; align-content: center; gap: 18px; }
+    .btn {
+      appearance:none; border:1px solid transparent; border-radius: 12px; padding: 12px 16px; font-weight: 600;
+      cursor: pointer; background: linear-gradient(180deg, var(--brand), #0284c7); color: white; box-shadow: 0 10px 18px var(--ring);
+      transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.03); }
+    .btn:active { transform: translateY(0); filter: brightness(.97); }
+
+    .muted { color: var(--muted); font-size: 14px; }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; opacity:.85; }
+
+    /* Loading indicator */
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.35); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; display:inline-block; vertical-align: -3px; margin-right:8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Hide splash once CMS is loaded */
+    .splash { position: relative; z-index: 1; }
+    .cms-ready .splash { display: none; }
+
+    /* Footer */
+    .foot { text-align: center; margin-top: 18px; font-size: 12px; color: var(--muted); }
+    .foot a { color: var(--text); opacity: .7; text-decoration: underline; }
+  </style>
 </head>
 <body>
+  <!-- Top bar -->
+  <div class="nav">
+    <div class="brand">
+      <div class="logo"><span>O4</span></div>
+      <span>Original4D — Admin</span>
+    </div>
+  </div>
+
+  <!-- Splash / login shell (hidden after CMS loads) -->
+  <main class="wrap splash" aria-busy="false">
+    <section class="card" aria-labelledby="admin-title">
+      <div class="card-hero">
+        <h1 id="admin-title">Panel Admin Konten</h1>
+        <p>Kelola tulisan, media, dan konfigurasi situs Anda dengan aman. Gunakan tombol di samping untuk masuk dan memulai CMS.</p>
+        <div class="badges">
+          <div class="badge">Decap CMS</div>
+          <div class="badge">Netlify Identity</div>
+          <div class="badge">SSO siap</div>
+          <div class="badge">Dark & Light</div>
+        </div>
+      </div>
+      <div class="card-cta">
+        <button id="btn-login" class="btn" type="button">Masuk &amp; Buka CMS</button>
+        <div class="muted">Atau gunakan <span class="code">/admin/#/</span> bila perlu.</div>
+        <div class="foot">Tips: Hak akses pengguna diatur di Netlify Identity.</div>
+      </div>
+    </section>
+  </main>
+
   <!-- Netlify Identity (login) -->
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <!-- Decap CMS -->
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   <script>
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        if (!user) window.netlifyIdentity.on("login", () => document.location.reload());
-      });
+    // Helper: lazy-load Decap CMS only after user authenticated
+    function loadCMS() {
+      if (window._cmsLoaded) return;
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js';
+      s.async = true;
+      s.onload = () => {
+        document.documentElement.classList.add('cms-ready');
+      };
+      document.head.appendChild(s);
+      window._cmsLoaded = true;
     }
-    // CMS siap pakai (config.yml akan dibaca otomatis)
+
+    const splash = document.querySelector('.splash');
+    const loginBtn = document.getElementById('btn-login');
+
+    // When identity is ready, decide whether to show splash or open CMS
+    function onIdentityInit(user) {
+      if (user) {
+        splash.setAttribute('aria-busy', 'true');
+        splash.innerHTML = '<div style="text-align:center; padding:60px">\
+          <span class="spinner"></span> Memuat CMS…</div>';
+        loadCMS();
+      } else {
+        // Not logged in: clicking will open Netlify Identity, then load CMS after login
+        loginBtn?.addEventListener('click', () => {
+          if (!window.netlifyIdentity) return (window.location.hash = '#/');
+          window.netlifyIdentity.open('login');
+        }, { once: true });
+
+        window.netlifyIdentity && window.netlifyIdentity.on('login', () => {
+          // Close modal, then load CMS
+          window.netlifyIdentity.close();
+          splash.setAttribute('aria-busy', 'true');
+          splash.innerHTML = '<div style="text-align:center; padding:60px">\
+            <span class="spinner"></span> Autentikasi berhasil. Memuat CMS…</div>';
+          loadCMS();
+        });
+      }
+    }
+
+    // Initialize Netlify Identity
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on('init', onIdentityInit);
+      window.netlifyIdentity.init();
+    } else {
+      // Fallback: if identity script fails, still allow access to default Decap route
+      loginBtn?.addEventListener('click', () => { location.href = '#/'; });
+    }
+
+    // Note: Decap CMS will automatically read config.yml in /admin/config.yml
   </script>
 </body>
 </html>
