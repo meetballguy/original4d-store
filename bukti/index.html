@@ -38,7 +38,7 @@
   {
     "@context":"https://schema.org",
     "@type":"CollectionPage",
-    "name":"Blog Original4D",
+    "name":"Bukti Original4D",
     "description":"Bukti Original4D — Bukti Kemenangan Terbaru, Info Kemenangan Resmi.",
     "url":"https://original4d.store/bukti/",
     "inLanguage":"id-ID"
@@ -107,10 +107,10 @@
 </head>
   <script type="module">
 (function(){
-  const m = location.pathname.match(/\/blog\/page\/(\d+)\//);
+  const m = location.pathname.match(/\/bukti\/page\/(\d+)\//);
   const page = m ? Math.max(1, parseInt(m[1],10)) : 1;
   const base = 'https://original4d.store';
-  const canonical = page === 1 ? `${base}/blog/` : `${base}/blog/page/${page}/`;
+  const canonical = page === 1 ? `${base}/bukti/` : `${base}/bukti/page/${page}/`;
 
   // set/replace canonical
   let can = document.querySelector('link[rel="canonical"]');
@@ -120,15 +120,15 @@
   // prev / next
   const head = document.head;
   const addRel = (rel, href) => { const l = document.createElement('link'); l.rel = rel; l.href = href; head.appendChild(l); };
-  if (page > 1) addRel('prev', page === 2 ? `${base}/blog/` : `${base}/blog/page/${page-1}/`);
+  if (page > 1) addRel('prev', page === 2 ? `${base}/bukti/` : `${base}/bukti/page/${page-1}/`);
   // untuk next, kamu bisa hitung jumlah halaman dari feed.json (opsional). Contoh ringan:
-  fetch('/blog/feed.json',{cache:'no-store'}).then(r=>r.json()).then(feed=>{
+  fetch('/bukti/feed.json',{cache:'no-store'}).then(r=>r.json()).then(feed=>{
     const total = (feed && feed._meta && feed._meta.totalPages) || null; // isi dari generate-feed.mjs
-    if (!total || page < total) addRel('next', `${base}/blog/page/${page+1}/`);
-  }).catch(()=>{ /* fallback: tetap pasang next satu step */ addRel('next', `${base}/blog/page/${page+1}/`); });
+    if (!total || page < total) addRel('next', `${base}/bukti/page/${page+1}/`);
+  }).catch(()=>{ /* fallback: tetap pasang next satu step */ addRel('next', `${base}/bukti/page/${page+1}/`); });
 
   // inject List/ItemList JSON-LD (top 10 di halaman ini)
-  fetch('/blog/feed.json',{cache:'no-store'}).then(r=>r.json()).then(feed=>{
+  fetch('/bukti/feed.json',{cache:'no-store'}).then(r=>r.json()).then(feed=>{
     const perPage = 10;
     const items = (feed.items || []);
     const start = (page-1)*perPage;
