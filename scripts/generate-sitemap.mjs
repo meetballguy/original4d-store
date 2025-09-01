@@ -1,14 +1,19 @@
+// scripts/generate-sitemap.mjs
 import { promises as fs } from "fs";
 import path from "path";
+import matter from "gray-matter";
 
 const ROOT = process.cwd();
+
+// ========= Exclusions =========
 const EXCLUDE_DIRS = new Set([
   "node_modules", ".git", ".netlify", "assets",
-  "admin",           // ➜ JANGAN ikut di sitemap
-  "partials"         // ➜ JANGAN ikut di sitemap
+  "admin",   // tidak diindeks
+  "partials" // tidak diindeks
 ]);
 const EXCLUDE_FILES = new Set(["404.html"]);
 
+// ========= Helpers =========
 function toPosix(p){ return p.split(path.sep).join("/"); }
 
 function pathToUrlPath(rel){
@@ -20,6 +25,10 @@ function pathToUrlPath(rel){
 }
 
 function getBaseUrl(){
+  // Netlify precedence:
+  // 1) production: process.env.URL
+  // 2) deploy preview: DEPLOY_PRIME_URL
+  // 3) fallback: SITE_URL / hardcoded
   const ctx = process.env.CONTEXT || "";
   if (ctx === "production" && process.env.URL) return process.env.URL;
   return process.env.DEPLOY_PRIME_URL || process.env.SITE_URL || "https://original4d.store";
@@ -38,8 +47,7 @@ async function walk(dir, list = []){
     } else if (e.isFile()){
       if (EXCLUDE_FILES.has(e.name)) continue;
 
-      // ➜ SKIP file verifikasi google *.html di root
-      //    (mis. google4f14a90dd181a8e9.html)
+      // Skip file verifikasi Google di root (mis. googleXXXX.html)
       if (/^google[0-9a-f]+\.html$/i.test(e.name) && !rel.includes(path.sep)) {
         continue;
       }
@@ -61,30 +69,86 @@ async function isNoIndex(htmlPath){
   }
 }
 
-function iso(dt){
+// date → ISO YYYY-MM-DDThh:mm:ss.sssZ
+function isoFull(dt){
   return new Date(dt).toISOString();
 }
+// YYYY-MM-DD
+function isoDate(dt){
+  const d = new Date(dt);
+  return isNaN(d) ? null : d.toISOString().slice(0,10);
+}
 
+// baca front-matter md (jika ada)
+async function readFrontMatter(mdAbs){
+  try{
+    const raw = await fs.readFile(mdAbs, "utf8");
+    const { data } = matter(raw);
+    return data || {};
+  }catch{
+    return {};
+  }
+}
+
+// coba mapping dari output → source md (blog & bukti)
+function matchMdForOutput(absHtmlPath){
+  // contoh:
+  //  - blog/news/<slug>/index.html  -> content/news/<slug>.md
+  //  - bukti/<slug>/index.html      -> content/wins/<slug>.md
+  const rel = toPosix(path.relative(ROOT, absHtmlPath));
+  const parts = rel.split("/");
+  const isIndex = parts[parts.length - 1] === "index.html";
+  if (!isIndex) return null;
+
+  // blog/news/<slug>/index.html
+  if (parts.length >= 4 && parts[0] === "blog" && parts[1] === "news") {
+    const slug = parts[2];
+    return path.join(ROOT, "content", "news", `${slug}.md`);
+  }
+
+  // bukti/<slug>/index.html
+  if (parts.length >= 3 && parts[0] === "bukti") {
+    const slug = parts[1];
+    return path.join(ROOT, "content", "wins", `${slug}.md`);
+  }
+
+  return null;
+}
+
+async function computeLastmod(absHtmlPath){
+  // Prioritas: FM.updated -> FM.date -> mtime HTML
+  const mdPath = matchMdForOutput(absHtmlPath);
+  if (mdPath){
+    const fm = await readFrontMatter(mdPath);
+    const chosen = fm.updated || fm.date;
+    if (chosen){
+      return isoDate(chosen) || isoDate(await fs.stat(absHtmlPath).then(s => s.mtime));
+    }
+  }
+  // fallback mtime file HTML
+  const stat = await fs.stat(absHtmlPath);
+  return isoDate(stat.mtime);
+}
+
+// ========= Main =========
 async function main(){
   const baseUrl = getBaseUrl().replace(/\/+$/,"");
   const files = await walk(ROOT);
-  const urls = [];
+  const map = new Map(); // loc -> {loc,lastmod}
 
   for (const rel of files){
     const abs = path.join(ROOT, rel);
     if (await isNoIndex(abs)) continue; // hormati meta noindex
 
     const urlPath = pathToUrlPath(rel);
-    const stat = await fs.stat(abs);
+    const loc = baseUrl + urlPath;
 
-    urls.push({
-      loc: baseUrl + urlPath,
-      lastmod: iso(stat.mtime)
-    });
+    const lastmod = await computeLastmod(abs);
+    map.set(loc, { loc, lastmod });
   }
 
-  // Root dulu, sisanya alfabetis
-  urls.sort((a, b) => {
+  // Sort: root dulu, lalu alfabetis
+  const urls = Array.from(map.values()).sort((a, b) => {
     if (a.loc === baseUrl + "/") return -1;
     if (b.loc === baseUrl + "/") return 1;
     return a.loc.localeCompare(b.loc);
@@ -95,7 +159,7 @@ async function main(){
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url>
     <loc>${u.loc}</loc>
-    <lastmod>${u.lastmod}</lastmod>
+    ${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}
   </url>`).join("\n")}
 </urlset>
 `;
@@ -108,27 +172,32 @@ ${urls.map(u => `  <url>
   try{
     robots = await fs.readFile(robotsPath, "utf8");
   }catch{
-    // default
     robots = "User-agent: *\nAllow: /\n";
   }
 
-  const lines = robots.trim().split(/\r?\n/).filter(Boolean);
-  const want = [
+  // susun minimal rules yang kita inginkan
+  const must = [
     "User-agent: *",
     "Allow: /",
     "Disallow: /admin/",
     "Disallow: /partials/"
   ];
-  // rebuild minimal + unique
+
+  // gabungkan unik (case-insensitive key)
   const merged = new Map();
-  for (const l of [...want, ...lines]) merged.set(l.toLowerCase(), l);
-  const base = Array.from(merged.values()).join("\n");
+  for (const line of [...must, ...robots.trim().split(/\r?\n/).filter(Boolean)]) {
+    merged.set(line.toLowerCase(), line);
+  }
+  let base = Array.from(merged.values()).join("\n");
 
+  // tambah/replace sitemap line
   const sitemapLine = `Sitemap: ${baseUrl}/sitemap.xml`;
-  const finalRobots = (base.includes("Sitemap:") ? base.replace(/Sitemap:\s*.*/i, sitemapLine)
-                                                 : base + "\n" + sitemapLine) + "\n";
-
-  await fs.writeFile(robotsPath, finalRobots, "utf8");
+  if (/^Sitemap:/mi.test(base)) {
+    base = base.replace(/^Sitemap:.*$/mi, sitemapLine);
+  } else {
+    base += `\n${sitemapLine}`;
+  }
+  await fs.writeFile(robotsPath, base.trim() + "\n", "utf8");
 
   console.log(`Generated sitemap with ${urls.length} URLs → sitemap.xml`);
 }
