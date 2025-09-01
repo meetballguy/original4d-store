@@ -30,14 +30,27 @@
   setBusy(listEl, true);
 
   try {
-    const [sx, fj] = await Promise.allSettled([
-      fetch('/sitemap.xml', { cache: 'no-store' }),
-      fetch('/blog/feed.json', { cache: 'no-store' })
-    ]);
-    if (sx.status === 'fulfilled') sitemapXML = await sx.value.text();
-    if (fj.status === 'fulfilled' && fj.value.ok) feedJSON = await fj.value.json();
-  } catch {
-    // ignore — fallback handled below
+    // sitemap
+    try {
+      const sx = await fetch('/sitemap.xml', { cache: 'no-store' });
+      if (sx.ok) sitemapXML = await sx.text();
+    } catch { /* ignore */ }
+
+    // feed utama: /bukti/feed.json → fallback: /blog/feed.json
+    try {
+      const r1 = await fetch('/bukti/feed.json', { cache: 'no-store' });
+      if (r1.ok) {
+        feedJSON = await r1.json();
+      } else {
+        const r2 = await fetch('/blog/feed.json', { cache: 'no-store' });
+        if (r2.ok) feedJSON = await r2.json();
+      }
+    } catch {
+      try {
+        const r2 = await fetch('/blog/feed.json', { cache: 'no-store' });
+        if (r2.ok) feedJSON = await r2.json();
+      } catch { /* ignore */ }
+    }
   } finally {
     // apapun hasilnya, matikan skeleton
     hideSkeleton();
