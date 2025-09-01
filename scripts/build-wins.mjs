@@ -1,20 +1,16 @@
-// scripts/build-posts.mjs
+// scripts/build-wins.mjs
 import { promises as fs } from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { marked } from "marked";
 
 const ROOT = process.cwd();
-const CONTENT_DIR = path.join(ROOT, "content", "wins");
-const OUT_DIR = path.join(ROOT, "bukti", "wins");
+const CONTENT_DIR = path.join(ROOT, "content", "wins"); // mirip blog: content/news
+const OUT_DIR = path.join(ROOT, "bukti");                // mirip blog: blog/news
+const SITE_URL = process.env.SITE_URL?.replace(/\/+$/, "") || "https://original4d.store";
 
-// Pastikan SITE_URL diakhiri tanpa slash
-const SITE_URL = (process.env.SITE_URL?.replace(/\/+$/, "") || "https://original4d.store");
-const SITE_NAME = "Original4D";
-
-// ---------- Utils ----------
+// util
 const toPosix = (p) => p.split(path.sep).join("/");
-
 const slugify = (s) =>
   (s || "")
     .toString()
@@ -28,12 +24,10 @@ function escapeHtml(s = "") {
   return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
 }
 
-// ISO normalizer (hapus millis agar rapi)
-function toISO(d) {
+function toISO(d){
   if (!d) return null;
   const t = new Date(d);
-  if (isNaN(t)) return null;
-  return t.toISOString(); // sudah Zulu (UTC)
+  return isNaN(t) ? null : t.toISOString();
 }
 
 function fmtID(dISO){
@@ -45,85 +39,43 @@ function fmtID(dISO){
   }
 }
 
-// ---------- Templates ----------
-function buildJsonLdArticle({ title, description, canonical, dateISO, updatedISO, ogImage }) {
-  const jsonLd = {
+// ======== TEMPLATE: 100% meniru build-posts.mjs kamu ========
+function articleTemplateWins({ title, description, canonical, dateISO, updatedISO, bodyHtml, ogImage }) {
+  const jsonLdArticle = {
     "@context": "https://schema.org",
     "@type": "Article",
     "mainEntityOfPage": { "@type": "WebPage", "@id": canonical },
     "headline": title,
     "datePublished": dateISO || undefined,
     "dateModified": (updatedISO || dateISO) || undefined,
-    "author": { "@type": "Organization", "name": SITE_NAME },
+    "author": { "@type": "Organization", "name": "Original4D" },
     "publisher": {
       "@type": "Organization",
-      "name": SITE_NAME,
+      "name": "Original4D",
       "logo": { "@type": "ImageObject", "url": `${SITE_URL}/assets/img/logo.png` }
     },
     "description": description || "",
     ...(ogImage ? { "image": [ogImage] } : {})
   };
-  return `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
-}
 
-function buildJsonLdBreadcrumb({ canonical, title }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Beranda", "item": `${SITE_URL}/` },
-      { "@type": "ListItem", "position": 2, "name": "bukti", "item": `${SITE_URL}/bukti/` },
-      { "@type": "ListItem", "position": 3, "name": title, "item": canonical }
+  // breadcrumb disesuaikan (Beranda → Bukti Kemenangan → Judul)
+  const jsonLdBreadcrumb = {
+    "@context":"https://schema.org",
+    "@type":"BreadcrumbList",
+    "itemListElement":[
+      { "@type":"ListItem","position":1,"name":"Beranda","item":`${SITE_URL}/` },
+      { "@type":"ListItem","position":2,"name":"Bukti Kemenangan","item":`${SITE_URL}/bukti/` },
+      { "@type":"ListItem","position":3,"name":title,"item":canonical }
     ]
   };
-  return `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
-}
-
-function articleTemplate({
-  title,
-  description,
-  canonical,
-  dateISO,
-  updatedISO,
-  bodyHtml,
-  ogImage,
-  ogImageAlt,
-  ogImageWidth,
-  ogImageHeight,
-  section,
-  tags
-}) {
-  const safeTitle = escapeHtml(title);
-  const safeDesc = escapeHtml(description || "");
-  const datePubISO = dateISO || "";
-  const dateModISO = updatedISO || dateISO || "";
-
-  const ldArticle = buildJsonLdArticle({ title, description, canonical, dateISO, updatedISO, ogImage });
-  const ldBreadcrumb = buildJsonLdBreadcrumb({ canonical, title });
-
-  // OG image extras
-  const ogImgTags = [];
-  if (ogImage) ogImgTags.push(`<meta property="og:image" content="${ogImage}">`);
-  if (ogImageAlt) ogImgTags.push(`<meta property="og:image:alt" content="${escapeHtml(ogImageAlt)}">`);
-  if (ogImageWidth) ogImgTags.push(`<meta property="og:image:width" content="${String(ogImageWidth)}">`);
-  if (ogImageHeight) ogImgTags.push(`<meta property="og:image:height" content="${String(ogImageHeight)}">`);
-
-  // Article extras
-  const articleExtras = [];
-  if (section) articleExtras.push(`<meta property="article:section" content="${escapeHtml(section)}">`);
-  if (Array.isArray(tags)) {
-    for (const t of tags) {
-      articleExtras.push(`<meta property="article:tag" content="${escapeHtml(String(t))}">`);
-    }
-  }
 
   return `<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <title>${safeTitle}</title>
+  <title>${escapeHtml(title)}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="${safeDesc}">
+  <meta name="description" content="${escapeHtml(description || "")}">
   <link rel="canonical" href="${canonical}">
   <meta name="robots" content="index,follow">
   <meta name="copyright" content="Original4D" />
@@ -144,35 +96,29 @@ function articleTemplate({
   <meta name="audience" content="all" />
   <meta name="geo.region" content="ID-JK" />
   <meta name="geo.placename" content="Jakarta Special Capital Region" />
-  
   <!-- Performance: preconnect/preload -->
   <link rel="preload" href="/assets/css/blog.css" as="style">
-  <link rel="alternate" type="application/json" href="/bukti/feed.json">
-  <link rel="alternate" type="application/rss+xml" href="/bukti/feed.xml">
-  
+
   <!-- Open Graph -->
-  <meta property="article:section" content="News">
-  <meta property="article:tag" content="Verifikasi">
-  <meta property="article:tag" content="Original4D">
   <meta property="og:locale" content="id_ID">
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="${SITE_NAME}">
-  <meta property="og:title" content="${safeTitle}">
-  <meta property="og:description" content="${safeDesc}">
+  <meta property="og:site_name" content="Original4D">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(description || "")}">
   <meta property="og:url" content="${canonical}">
-  ${ogImgTags.join("\n  ")}
-  <meta property="article:published_time" content="${datePubISO}">
-  <meta property="article:modified_time" content="${dateModISO}">
-  ${articleExtras.join("\n  ")}
+  ${ogImage ? `<meta property="og:image" content="${ogImage}">` : ""}
+  <meta property="article:published_time" content="${dateISO || ""}">
+  <meta property="article:modified_time" content="${(updatedISO || dateISO) || ""}">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${safeTitle}">
-  <meta name="twitter:description" content="${safeDesc}">
+  <meta name="twitter:title" content="${escapeHtml(title)}">
+  <meta name="twitter:description" content="${escapeHtml(description || "")}">
   ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ""}
 
-  ${ldBreadcrumb}
-  ${ldArticle}
+  <!-- JSON-LD -->
+  <script type="application/ld+json">${JSON.stringify(jsonLdBreadcrumb)}</script>
+  <script type="application/ld+json">${JSON.stringify(jsonLdArticle)}</script>
 
   <link rel="icon" href="${SITE_URL}/assets/img/favicon.png" type="image/png">
   <link rel="stylesheet" href="/assets/css/blog.css">
@@ -182,14 +128,14 @@ function articleTemplate({
 
   <main class="container">
     <nav class="crumb" aria-label="Breadcrumb">
-      <a href="/">Beranda</a> › <a href="/bukti/">bukti</a> › <strong>${safeTitle}</strong>
+      <a href="/">Beranda</a> › <a href="/bukti/">Bukti Kemenangan</a> › <strong>${escapeHtml(title)}</strong>
     </nav>
 
     <article class="post">
-      <h1>${safeTitle}</h1>
+      <h1>${escapeHtml(title)}</h1>
       <div class="post-meta">
-        ${datePubISO ? `<time datetime="${datePubISO}">Terbit: ${fmtID(datePubISO)}</time>` : ""}
-        ${dateModISO ? ` • <time datetime="${dateModISO}">Update: ${fmtID(dateModISO)}</time>` : ""}
+        ${dateISO ? `<time datetime="${dateISO}">Terbit: ${fmtID(dateISO)}</time>` : ""}
+        ${updatedISO ? ` • <time datetime="${updatedISO}">Update: ${fmtID(updatedISO)}</time>` : ""}
       </div>
       <div class="post-body">
         ${bodyHtml}
@@ -203,50 +149,33 @@ function articleTemplate({
 </html>`;
 }
 
-// ---------- Build ----------
 async function ensureDir(p){ await fs.mkdir(p, { recursive: true }); }
 
 async function buildOne(mdPath){
   const raw = await fs.readFile(mdPath, "utf8");
   const { data: fm, content } = matter(raw);
 
-  // Draft → skip
   if (fm.draft) return null;
 
   const title = fm.title || "Tanpa Judul";
   const description = fm.description || "";
-
-  // Slug & output path
   const baseSlug = fm.slug ? slugify(fm.slug) : slugify(path.basename(mdPath, ".md"));
   const outDir = path.join(OUT_DIR, baseSlug);
-  const canonical = `${SITE_URL}/bukti/wins/${baseSlug}/`;
+  const canonical = `${SITE_URL}/bukti/${baseSlug}/`;
 
-  // Tanggal
   const dateISO = toISO(fm.date);
   const updatedISO = toISO(fm.updated);
 
-  // Render Markdown → HTML
   const bodyHtml = marked.parse(content || "");
 
-  // OG image + extras
-  const ogImage = fm.ogImage || `${SITE_URL}/assets/img/hero.webp`;
-  const ogImageAlt = fm.ogImageAlt || title;
-  const ogImageWidth = fm.ogImageWidth || null;
-  const ogImageHeight = fm.ogImageHeight || null;
-
-  const html = articleTemplate({
+  const html = articleTemplateWins({
     title,
     description,
     canonical,
     dateISO,
     updatedISO,
     bodyHtml,
-    ogImage,
-    ogImageAlt,
-    ogImageWidth,
-    ogImageHeight,
-    section: fm.section || null,
-    tags: fm.tags || null
+    ogImage: fm.ogImage || `${SITE_URL}/assets/img/hero.webp`
   });
 
   await ensureDir(outDir);
@@ -267,7 +196,7 @@ async function main(){
     const r = await buildOne(f);
     if (r) results.push(r);
   }
-  console.log(`[build-posts] Rendered ${results.length} article(s) from ${toPosix(path.relative(ROOT, CONTENT_DIR))}`);
+  console.log(`[build-wins] Rendered ${results.length} item(s) from ${toPosix(path.relative(ROOT, CONTENT_DIR))}`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
