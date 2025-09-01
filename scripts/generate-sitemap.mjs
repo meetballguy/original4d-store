@@ -6,7 +6,7 @@ import matter from "gray-matter";
 const ROOT = process.cwd();
 const MANIFEST_PATH = path.join(ROOT, ".sitemap-manifest.json"); // simpan state lastmod/changefreq/priority
 const FREEZE_EXISTING = process.env.SITEMAP_FREEZE_EXISTING !== "0"; // default freeze = true
-const PING_AFTER_BUILD = process.env.SITEMAP_PING === "1"; // set ke "1" kalau mau ping Google/Bing
+const PING_AFTER_BUILD = process.env.SITEMAP_PING === "1"; // set "1" untuk ping Google (+ IndexNow jika KEY ada)
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || ""; // opsional: jika pakai IndexNow
 
 // ========= Exclusions =========
@@ -48,10 +48,8 @@ async function walk(dir, list = []){
       await walk(abs, list);
     } else if (e.isFile()){
       if (EXCLUDE_FILES.has(e.name)) continue;
-
       // Skip file verifikasi Google di root (mis. googleXXXX.html)
       if (/^google[0-9a-f]+\.html$/i.test(e.name) && !rel.includes(path.sep)) continue;
-
       if (e.name.endsWith(".html")) list.push(rel);
     }
   }
@@ -160,7 +158,7 @@ function daysBetween(fromISO, toDate = new Date()){
 
 function computeChangefreq(type, lastmodISO){
   if (type === "home") return "daily";
-  if (type === "section") return "daily"; // listing sering berubah, tapi lastmod bisa difreeze via manifest
+  if (type === "section") return "daily";
   const age = daysBetween(lastmodISO);
   if (age <= 7) return "daily";
   if (age <= 30) return "weekly";
@@ -307,14 +305,13 @@ async function pingSearchEngines(sitemapUrl){
   }
 
   // IndexNow (Bing & co) — aktif kalau INDEXNOW_KEY tersedia
-  const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "";
-  if (!INDEXNOW_KEY) {
+  const key = process.env.INDEXNOW_KEY || "";
+  if (!key) {
     console.log("[IndexNow] skipped (INDEXNOW_KEY not set)");
     return;
   }
   try {
     const host = new URL(sitemapUrl).host;
-    const key = INDEXNOW_KEY;
     const keyLocation = `https://${host}/${key}.txt`;
     const payload = { host, key, keyLocation, urlList: [sitemapUrl] };
     const res = await fetch("https://api.indexnow.org/indexnow", {
@@ -325,30 +322,6 @@ async function pingSearchEngines(sitemapUrl){
     console.log(`[IndexNow] ${res.status}`);
   } catch (e) {
     console.warn("[IndexNow] Failed:", e?.message || e);
-  }
-}
-
-  // IndexNow (opsional) — butuh KEY & file kunci di root: /{INDEXNOW_KEY}.txt
-  if (INDEXNOW_KEY) {
-    try{
-      const host = new URL(sitemapUrl).host;
-      const key = INDEXNOW_KEY;
-      const keyLocation = `https://${host}/${key}.txt`;
-      const payload = {
-        host,
-        key,
-        keyLocation,
-        urlList: [sitemapUrl]
-      };
-      const res = await fetch("https://api.indexnow.org/indexnow", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      console.log(`[IndexNow] ${res.status}`);
-    }catch(e){
-      console.warn("[IndexNow] Failed:", e?.message || e);
-    }
   }
 }
 
