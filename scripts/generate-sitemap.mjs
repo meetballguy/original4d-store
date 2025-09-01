@@ -297,20 +297,36 @@ ${urls.map(u => `  <url>
 
 // ---- Ping helpers ----
 async function pingSearchEngines(sitemapUrl){
-  // Node 18+ has global fetch
-  const endpoints = [
-    `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
-    `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
-  ];
-
-  for (const url of endpoints){
-    try{
-      const res = await fetch(url);
-      console.log(`[Sitemap Ping] ${url} -> ${res.status}`);
-    }catch(e){
-      console.warn(`[Sitemap Ping] Failed: ${url} ->`, e?.message || e);
-    }
+  // Ping Google
+  try {
+    const g = `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
+    const r = await fetch(g);
+    console.log(`[Sitemap Ping] Google -> ${r.status}`);
+  } catch (e) {
+    console.warn("[Sitemap Ping] Google failed:", e?.message || e);
   }
+
+  // IndexNow (Bing & co) — aktif kalau INDEXNOW_KEY tersedia
+  const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "";
+  if (!INDEXNOW_KEY) {
+    console.log("[IndexNow] skipped (INDEXNOW_KEY not set)");
+    return;
+  }
+  try {
+    const host = new URL(sitemapUrl).host;
+    const key = INDEXNOW_KEY;
+    const keyLocation = `https://${host}/${key}.txt`;
+    const payload = { host, key, keyLocation, urlList: [sitemapUrl] };
+    const res = await fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    console.log(`[IndexNow] ${res.status}`);
+  } catch (e) {
+    console.warn("[IndexNow] Failed:", e?.message || e);
+  }
+}
 
   // IndexNow (opsional) — butuh KEY & file kunci di root: /{INDEXNOW_KEY}.txt
   if (INDEXNOW_KEY) {
