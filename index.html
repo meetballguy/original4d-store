@@ -184,7 +184,7 @@
       --fs-1:clamp(26px,3vw,40px);
       --fs-2:clamp(18px,2.2vw,24px);
       --fs-3:clamp(14px,1.6vw,16px);
-      --header-h:clamp(1px,0vw,1px); /* tinggi header sticky */
+      --header-h:clamp(0px,0vw,0px); /* tinggi header sticky */
     }
 
     /* =====================
@@ -236,7 +236,7 @@
        ===================== */
     main{padding:calc(var(--header-h) + var(--space-lg)) 0 calc(80px + env(safe-area-inset-bottom) + var(--space));}
     .hero{display:grid;gap:var(--space);align-items:stretch;grid-template-columns:1fr 1fr}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--space);box-shadow:var(--shadow);display:flex;flex-direction:column;margin-bottom:10px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--space);box-shadow:var(--shadow);display:flex;flex-direction:column;margin-bottom:5px}
 
     /* Media card (ikuti rasio gambar 600x350 ≈ 12:7) */
     .media-card{padding:0;overflow:hidden}
@@ -453,6 +453,7 @@
   
 </body>
 </html>
+
 
 
 
