@@ -1,7 +1,7 @@
-# ===== Build: generate posts -> inject partials -> feeds -> sitemap =====
+# ===== Build: generate posts -> wins -> inject partials -> feeds -> sitemap =====
 [build]
   publish = "."
-  command = "node scripts/build-posts.mjs && node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
+  command = "node scripts/build-posts.mjs && node scripts/build-wins.mjs && node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -38,7 +38,21 @@
   status = 301
   force  = true
 
-# Pagination: tanpa slash -> berslash
+# /bukti/index.html -> /bukti/
+[[redirects]]
+  from = "/bukti/index.html"
+  to   = "/bukti/"
+  status = 301
+  force  = true
+
+# Pola link yang kamu minta: /bukti/wins/:slug.md -> /bukti/:slug/
+[[redirects]]
+  from = "/bukti/wins/:slug.md"
+  to   = "/bukti/:slug/"
+  status = 301
+  force  = true
+
+# Pagination: tanpa slash -> berslash (blog)
 [[redirects]]
   from   = "/blog/page/:page"
   to     = "/blog/page/:page/"
@@ -64,7 +78,6 @@
   to   = "/admin/"
   status = 301
   force  = true
-
 
 # ===== Headers Global =====
 [[headers]]
@@ -184,6 +197,7 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
 
 
 
