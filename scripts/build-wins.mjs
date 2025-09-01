@@ -175,134 +175,58 @@ function winsIndexTemplate({ canonical, items }) {
   <title>${safeTitle}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="${safeDesc}">
-  <link rel="canonical" href="${canonical}">
   <meta name="robots" content="index,follow">
-  <meta name="copyright" content="Original4D" />
-  <meta name="author" content="Original4D" />
-  <meta name="distribution" content="global" />
-  <meta name="publisher" content="Original4D" />
-  <meta name="geo.country" content="ID" />
-  <meta name="tgn.nation" content="Indonesia" />
-  <meta name="googlebot" content="index,follow" />
-  <meta name="Googlebot-Image" content="follow, all" />
-  <meta name="Scooter" content="follow, all" />
-  <meta name="msnbot" content="follow, all" />
-  <meta name="alexabot" content="follow, all" />
-  <meta name="Slurp" content="follow, all" />
-  <meta name="ZyBorg" content="follow, all" />
-  <meta name="bingbot" content="follow, all" />
-  <meta name="MSSmartTagsPreventParsing" content="true" />
-  <meta name="audience" content="all" />
-  <meta name="geo.region" content="ID-JK" />
-  <meta name="geo.placename" content="Jakarta Special Capital Region" />
-  
-  <!-- Performance: preconnect/preload -->
-  <link rel="preload" href="/assets/css/blog.css" as="style">
-  <link rel="alternate" type="application/json" href="/blog/feed.json">
-  <link rel="alternate" type="application/rss+xml" href="/blog/feed.xml">
-  
-  <!-- Open Graph -->
-  <meta property="article:section" content="News">
-  <meta property="article:tag" content="Verifikasi">
-  <meta property="article:tag" content="Original4D">
+  <link rel="canonical" href="${canonical}">
+
   <meta property="og:locale" content="id_ID">
-  <meta property="og:type" content="article">
+  <meta property="og:type" content="website">
   <meta property="og:site_name" content="${SITE_NAME}">
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
   <meta property="og:url" content="${canonical}">
-  ${ogImgTags.join("\n  ")}
-  <meta property="article:published_time" content="${datePubISO}">
-  <meta property="article:modified_time" content="${dateModISO}">
-  ${articleExtras.join("\n  ")}
 
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${safeTitle}">
   <meta name="twitter:description" content="${safeDesc}">
-  ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ""}
 
-  ${ldBreadcrumb}
-  ${ldArticle}
-
-  <link rel="icon" href="${SITE_URL}/assets/img/favicon.png" type="image/png">
-  <link rel="stylesheet" href="/assets/css/blog.css">
-</head>
-function winDetailTemplate({ title, canonical, dateISO, amount, member_mask, game, description, bodyHtml, proof_image }) {
-  const safeTitle = escapeHtml(title);
-  const safeDesc = escapeHtml(description || "");
-
-  const ldBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Beranda", "item": `${SITE_URL}/` },
-      { "@type": "ListItem", "position": 2, "name": "Bukti Kemenangan", "item": `${SITE_URL}/bukti/` },
-      { "@type": "ListItem", "position": 3, "name": safeTitle, "item": canonical }
-    ]
-  };
-  const ldPage = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": safeTitle,
-    "url": canonical,
-    "description": safeDesc || undefined
-  };
-
-  return `<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8">
-  <title>${safeTitle}</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="${safeDesc}">
-  <meta name="robots" content="index,follow">
-  <link rel="canonical" href="${canonical}">
-
-  <!-- OG/Twitter ringkas, mengikuti pola artikel -->
-  <meta property="og:locale" content="id_ID">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="${SITE_NAME}">
-  <meta property="og:title" content="${safeTitle}">
-  <meta property="og:description" content="${safeDesc}">
-  <meta property="og:url" content="${canonical}">
-  ${proof_image ? `<meta property="og:image" content="${proof_image}">` : ""}
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${safeTitle}">
-  <meta name="twitter:description" content="${safeDesc}">
-  ${proof_image ? `<meta name="twitter:image" content="${proof_image}">` : ""}
-
-  <script type="application/ld+json">${JSON.stringify(ldBreadcrumb)}</script>
-  <script type="application/ld+json">${JSON.stringify(ldPage)}</script>
+  <script type="application/ld+json">${JSON.stringify(ldCollection)}</script>
+  <script type="application/ld+json">${JSON.stringify(ldItemList)}</script>
 
   <link rel="icon" href="${SITE_URL}/assets/img/favicon.png" type="image/png">
   <link rel="preload" href="/assets/css/blog.css" as="style">
   <link rel="stylesheet" href="/assets/css/blog.css">
+  <style>
+    /* grid sederhana untuk kartu bukti */
+    .grid-wins { display:grid; gap:16px; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); }
+    .card-win { display:block; border:1px solid rgba(0,0,0,.08); border-radius:12px; overflow:hidden; text-decoration:none; background:#fff; }
+    .card-win .thumb { aspect-ratio: 16/9; background:#f2f4f8; display:grid; place-items:center; }
+    .card-win .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .card-win .meta { padding:12px; color:#0b1220; }
+    .card-win h3 { margin:0 0 6px; font-size:16px; line-height:1.35; color:#0b1220; }
+    .card-win .sub { font-size:12px; color:#475569; }
+    @media (prefers-color-scheme: dark) {
+      .card-win { background:#0f172a; border-color: rgba(255,255,255,.12); }
+      .card-win .meta { color:#e5e7eb; }
+      .card-win h3 { color:#e5e7eb; }
+      .card-win .sub { color:#94a3b8; }
+    }
+  </style>
 </head>
 <body>
   <!-- PARTIAL:HEADER -->
 
   <main class="container">
     <nav class="crumb" aria-label="Breadcrumb">
-      <a href="/">Beranda</a> › <a href="/bukti/">Bukti Kemenangan</a> › <strong>${safeTitle}</strong>
+      <a href="/">Beranda</a> › <strong>Bukti Kemenangan</strong>
     </nav>
 
     <article class="post">
-      <h1>${safeTitle}</h1>
-      <div class="post-meta">
-        ${dateISO ? `<time datetime="${dateISO}">Terbit: ${fmtID(dateISO)}</time>` : ""}
-        ${amount ? ` • <span>Menang: Rp ${Number(amount).toLocaleString("id-ID")}</span>` : ""}
-        ${member_mask ? ` • <span>Member: ${escapeHtml(member_mask)}</span>` : ""}
-        ${game ? ` • <span>Game: ${escapeHtml(game)}</span>` : ""}
-      </div>
+      <h1>Bukti Kemenangan Member</h1>
+      <p>Kumpulan screenshot/foto kemenangan member Original4D. ID dimasking untuk menjaga privasi.</p>
 
-      <div class="post-body">
-        ${proof_image ? `<figure class="win-proof"><img src="${proof_image}" alt="${safeTitle}" loading="lazy" decoding="async"></figure>` : ""}
-        ${safeDesc ? `<p>${safeDesc}</p>` : ""}
-        ${bodyHtml || ""}
+      <div class="grid-wins">
+        ${cards}
       </div>
-
-      <nav class="post-nav"><a href="/bukti/">← Kembali ke daftar</a></nav>
     </article>
   </main>
 
@@ -342,3 +266,37 @@ async function buildDetail(mdPath) {
     title,
     url: `/bukti/${baseSlug}/`,
     dateISO,
+    amount,
+    member_mask,
+    game,
+    description,
+    proof_image
+  };
+}
+
+async function buildIndex(items) {
+  const canonical = `${SITE_URL}/bukti/`;
+  // urut terbaru–terlama
+  const sorted = items.slice().sort((a,b) => (b.dateISO || "").localeCompare(a.dateISO || ""));
+  const html = winsIndexTemplate({ canonical, items: sorted });
+  await ensureDir(OUT_DIR);
+  await fs.writeFile(path.join(OUT_DIR, "index.html"), html, "utf8");
+}
+
+async function main() {
+  try { await fs.access(CONTENT_DIR); } catch { await ensureDir(CONTENT_DIR); }
+
+  const files = (await fs.readdir(CONTENT_DIR))
+    .filter(f => f.endsWith(".md"))
+    .map(f => path.join(CONTENT_DIR, f));
+
+  const items = [];
+  for (const f of files) {
+    const item = await buildDetail(f);
+    if (item) items.push(item);
+  }
+  await buildIndex(items);
+  console.log(`[build-wins] Rendered ${items.length} item(s) from ${toPosix(path.relative(ROOT, CONTENT_DIR))}`);
+}
+
+main().catch(err => { console.error(err); process.exit(1); });
