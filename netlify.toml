@@ -176,6 +176,20 @@
     X-Content-Type-Options = "nosniff"
 
 [[headers]]
+  for = "/bukti/feed.json"
+  [headers.values]
+    Content-Type  = "application/json; charset=utf-8"
+    Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/bukti/feed.xml"
+  [headers.values]
+    Content-Type  = "application/rss+xml; charset=utf-8"
+    Cache-Control = "no-cache"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
   for = "/sitemap.xml"
   [headers.values]
     Content-Type  = "application/xml; charset=utf-8"
@@ -202,6 +216,7 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
 
 
 
