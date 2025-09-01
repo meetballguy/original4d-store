@@ -239,8 +239,10 @@
       sitemapPath = "/sitemap.xml"
       
 [[edge_functions]]
-  path = "/:key.txt"
-  function = "indexnow-key"
+function = "indexnow-key"
+path = "/c2e5ea486cc94b7a9be78d4cd25c26b0.txt"
+
+
 
 
 
