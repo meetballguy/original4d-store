@@ -65,13 +65,6 @@
   status = 301
   force  = true
 
-# (Opsional) jaga kalau ada yang akses /blog/news/slug.html
-[[redirects]]
-  from = "/blog/news/:slug.html"
-  to   = "/blog/news/:slug/"
-  status = 301
-  force  = true
-
 # Pagination: tanpa slash -> berslash (blog)
 [[redirects]]
   from   = "/blog/page/:page"
@@ -236,3 +229,4 @@
     [context.production.plugins.inputs]
       providers  = ["google","bing"]
       sitemapPath = "/sitemap.xml"
+
