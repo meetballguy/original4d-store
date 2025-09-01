@@ -11,7 +11,10 @@ const EXCLUDE_DIRS = new Set([
   "admin",   // tidak diindeks
   "partials" // tidak diindeks
 ]);
-const EXCLUDE_FILES = new Set(["404.html"]);
+const EXCLUDE_FILES = new Set([
+  "404.html",
+  "amp.index.html", // <<— penting: jangan masukkan varian AMP file ke sitemap
+]);
 
 // ========= Helpers =========
 function toPosix(p){ return p.split(path.sep).join("/"); }
@@ -130,6 +133,38 @@ async function computeLastmod(absHtmlPath){
   return isoDate(stat.mtime);
 }
 
+// === Canonical extractor ===
+function normalizeUrl(href, baseUrl){
+  try {
+    // dukung href absolut & relatif
+    const u = new URL(href, baseUrl);
+    // normalisasi trailing slash untuk root
+    if (u.pathname === "") u.pathname = "/";
+    // prefer trailing slash untuk direktori
+    if (!path.extname(u.pathname) && !u.pathname.endsWith("/")) u.pathname += "/";
+    u.hash = ""; // sitemap: jangan include fragment
+    return u.toString().replace(/\/+$/, "/"); // single trailing slash
+  } catch {
+    return null;
+  }
+}
+
+async function readCanonical(absHtmlPath, baseUrl){
+  try{
+    const html = await fs.readFile(absHtmlPath, "utf8");
+    // cari <link rel="canonical" ... href="...">
+    const m = html.match(/<link[^>]+rel=["']canonical["'][^>]*>/i);
+    if (!m) return null;
+    const tag = m[0];
+    const hrefMatch = tag.match(/\bhref=["']([^"']+)["']/i);
+    if (!hrefMatch) return null;
+    const canon = normalizeUrl(hrefMatch[1], baseUrl);
+    return canon || null;
+  }catch{
+    return null;
+  }
+}
+
 // ========= Main =========
 async function main(){
   const baseUrl = getBaseUrl().replace(/\/+$/,"");
@@ -140,17 +175,29 @@ async function main(){
     const abs = path.join(ROOT, rel);
     if (await isNoIndex(abs)) continue; // hormati meta noindex
 
+    // default URL dari path file
     const urlPath = pathToUrlPath(rel);
-    const loc = baseUrl + urlPath;
+    let loc = baseUrl + urlPath;
+
+    // Jika ada canonical, pakai canonical sebagai loc
+    const canonical = await readCanonical(abs, baseUrl + "/");
+    if (canonical) {
+      loc = canonical.replace(/\/+$/, "/");
+    }
 
     const lastmod = await computeLastmod(abs);
-    map.set(loc, { loc, lastmod });
+    // hanya simpan 1 entry per canonical loc (dedupe)
+    const prev = map.get(loc);
+    if (!prev || (lastmod && prev.lastmod && lastmod > prev.lastmod)) {
+      map.set(loc, { loc, lastmod });
+    }
   }
 
   // Sort: root dulu, lalu alfabetis
+  const rootUrl = baseUrl + "/";
   const urls = Array.from(map.values()).sort((a, b) => {
-    if (a.loc === baseUrl + "/") return -1;
-    if (b.loc === baseUrl + "/") return 1;
+    if (a.loc === rootUrl) return -1;
+    if (b.loc === rootUrl) return 1;
     return a.loc.localeCompare(b.loc);
   });
 
@@ -199,7 +246,7 @@ ${urls.map(u => `  <url>
   }
   await fs.writeFile(robotsPath, base.trim() + "\n", "utf8");
 
-  console.log(`Generated sitemap with ${urls.length} URLs → sitemap.xml`);
+  console.log(`Generated sitemap with ${urls.length} canonical URLs → sitemap.xml`);
 }
 
 main().catch(err => {
