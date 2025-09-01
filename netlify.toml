@@ -108,7 +108,7 @@
 
 # ===== Cache policy =====
 
-# HTML utama & daftar blog jangan di-cache agar paging & listing selalu fresh
+# HTML utama & daftar blog/bukti jangan di-cache agar listing selalu fresh
 [[headers]]
   for = "/"
   [headers.values]
@@ -131,6 +131,11 @@
 
 [[headers]]
   for = "/blog/page/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/bukti/"
   [headers.values]
     Cache-Control = "no-cache"
 
