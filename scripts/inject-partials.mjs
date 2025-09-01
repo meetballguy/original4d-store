@@ -31,9 +31,17 @@ function alreadyHasHead(html) {
          html.includes("<!-- PARTIAL:HEAD_ARTICLE (injected) -->");
 }
 
+// tentukan SECTION dari path file
+function sectionFor(fileAbsPath) {
+  const rel = path.relative(ROOT, fileAbsPath);
+  const top = rel.split(path.sep)[0];
+  if (top === "bukti") return "Bukti";
+  return "Blog"; // default
+}
+
 async function main() {
   const head   = await readPartial("head-article");
-  const header = await readPartial("header");
+  const headerRaw = await readPartial("header");
   const footer = await readPartial("footer");
 
   for (const base of TARGET_DIRS) {
@@ -63,15 +71,19 @@ async function main() {
         }
       }
 
-      // ===== Inject HEADER =====
-      if (header) {
+      // ===== Inject HEADER (pakai placeholder {{SECTION}}) =====
+      if (headerRaw) {
+        const section = sectionFor(file);
+        const header = headerRaw.replace(/{{\s*SECTION\s*}}/g, section);
+
         if (html.includes("<!-- PARTIAL:HEADER -->")) {
           html = html.replace("<!-- PARTIAL:HEADER -->", header);
           changed = true;
         } else if (/<header[\s\S]*?<\/header>/i.test(html)) {
           html = html.replace(/<header[\s\S]*?<\/header>/i, header);
           changed = true;
-        } else if (/<body[^>]*>/i.test(html) && !html.includes(header)) {
+        } else if (/<body[^>]*>/i.test(html) && !html.includes("site-header")) {
+          // fallback: sisip setelah <body>; gunakan pencarian kelas agar tidak tergantung isi header mentah
           html = html.replace(/<body[^>]*>/i, (m) => `${m}\n${header}`);
           changed = true;
         }
@@ -85,7 +97,7 @@ async function main() {
         } else if (/<footer[\s\S]*?<\/footer>/i.test(html)) {
           html = html.replace(/<footer[\s\S]*?<\/footer>/i, footer);
           changed = true;
-        } else if (/<\/body>/i.test(html) && !html.includes(footer)) {
+        } else if (/<\/body>/i.test(html) && !html.includes("site-footer")) {
           html = html.replace(/<\/body>/i, `${footer}\n</body>`);
           changed = true;
         }
