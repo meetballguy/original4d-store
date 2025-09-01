@@ -6,52 +6,98 @@ const ROOT = process.cwd();
 const PART_DIR = path.join(ROOT, "partials");
 const TARGET_DIRS = [path.join(ROOT, "blog")]; // injek hanya halaman blog
 
-async function readPartial(name){
-  try { return await fs.readFile(path.join(PART_DIR, `${name}.html`), "utf8"); }
-  catch { return ""; }
+async function readPartial(name) {
+  try {
+    return await fs.readFile(path.join(PART_DIR, `${name}.html`), "utf8");
+  } catch {
+    return "";
+  }
 }
 
-async function* walk(dir){
-  for (const d of await fs.readdir(dir, { withFileTypes: true })){
+async function* walk(dir) {
+  for (const d of await fs.readdir(dir, { withFileTypes: true })) {
     const res = path.join(dir, d.name);
     if (d.isDirectory()) yield* walk(res);
     else if (d.isFile() && d.name.endsWith(".html")) yield res;
   }
 }
 
-async function main(){
+// sederhana: cek apakah string (head) sudah “ada” di dokumen
+function alreadyHasHead(html) {
+  // cari beberapa sinyal umum dari head-article (meta og atau robots)
+  return /<meta[^>]+name=["']robots["']/i.test(html) ||
+         /<meta[^>]+property=["']og:title["']/i.test(html) ||
+         html.includes("<!-- PARTIAL:HEAD_ARTICLE (injected) -->");
+}
+
+async function main() {
+  const head = await readPartial("head-article");
   const header = await readPartial("header");
   const footer = await readPartial("footer");
 
-  for (const base of TARGET_DIRS){
+  for (const base of TARGET_DIRS) {
     try { await fs.access(base); } catch { continue; }
-    for await (const file of walk(base)){
-      let html = await fs.readFile(file, "utf8");
 
+    for await (const file of walk(base)) {
+      let html = await fs.readFile(file, "utf8");
+      let changed = false;
+
+      // ===== Inject HEAD (meta, og, json-ld) =====
+      if (head && /<head[^>]*>/i.test(html) && !alreadyHasHead(html)) {
+        if (html.includes("<!-- PARTIAL:HEAD_ARTICLE -->")) {
+          html = html.replace(
+            "<!-- PARTIAL:HEAD_ARTICLE -->",
+            `<!-- PARTIAL:HEAD_ARTICLE (injected) -->\n${head}`
+          );
+          changed = true;
+        } else if (html.includes("<!-- PARTIAL:HEAD -->")) {
+          html = html.replace(
+            "<!-- PARTIAL:HEAD -->",
+            `<!-- PARTIAL:HEAD (injected) -->\n${head}`
+          );
+          changed = true;
+        } else {
+          // fallback: sisipkan sebelum </head>
+          html = html.replace(/<\/head>/i, `${head}\n</head>`);
+          changed = true;
+        }
+      }
+
+      // ===== Inject HEADER (nav) di body =====
       if (header) {
         if (html.includes("<!-- PARTIAL:HEADER -->")) {
           html = html.replace("<!-- PARTIAL:HEADER -->", header);
+          changed = true;
         } else if (/<header[\s\S]*?<\/header>/i.test(html)) {
+          // ganti blok header eksisting
           html = html.replace(/<header[\s\S]*?<\/header>/i, header);
-        } else {
-          html = html.replace(/<body[^>]*>/i, m => `${m}\n${header}`);
+          changed = true;
+        } else if (/<body[^>]*>/i.test(html) && !html.includes(header)) {
+          // fallback: sisip setelah <body>
+          html = html.replace(/<body[^>]*>/i, (m) => `${m}\n${header}`);
+          changed = true;
         }
       }
 
+      // ===== Inject FOOTER (footer) di body =====
       if (footer) {
         if (html.includes("<!-- PARTIAL:FOOTER -->")) {
           html = html.replace("<!-- PARTIAL:FOOTER -->", footer);
+          changed = true;
         } else if (/<footer[\s\S]*?<\/footer>/i.test(html)) {
           html = html.replace(/<footer[\s\S]*?<\/footer>/i, footer);
-        } else {
+          changed = true;
+        } else if (/<\/body>/i.test(html) && !html.includes(footer)) {
           html = html.replace(/<\/body>/i, `${footer}\n</body>`);
+          changed = true;
         }
       }
 
-      await fs.writeFile(file, html, "utf8");
+      if (changed) await fs.writeFile(file, html, "utf8");
     }
   }
+
   console.log("[inject-partials] Done");
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch((e) => { console.error(e); process.exit(1); });
