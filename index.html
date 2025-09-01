@@ -317,38 +317,6 @@
       .actions .menu-toggle{display:none}
       .hero{grid-template-columns:1fr 1fr}
     }
-
-    /* ——— Sidebar layout & menu ——— */
-    .menu-title{margin:0;color:var(--brand);font-size:var(--fs-2)}
-    .sidebar__head{
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:12px
-    }
-    .sidebar__close{min-width:48px; padding-inline:16px}
-    .sidebar__list{list-style:none; margin:0; padding:0; display:grid; gap:10px}
-    
-    /* ——— Brand & header polish ——— */
-    .brand{display:flex; align-items:center; gap:10px}
-    .brand img{height:52px; width:auto}
-    @media (min-width:1200px){ .brand img{height:58px} }
-    
-    /* ——— Section utilities (rapikan jarak & judul) ——— */
-    .section{ margin-top: var(--space) }
-    .section-title{
-      margin:0 0 8px; color:#fff; font-size:var(--fs-2);
-      position:relative; padding-bottom:8px
-    }
-    .section-title::after{
-      content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px;
-      background:linear-gradient(90deg, rgba(255,215,0,.55), rgba(0,212,255,.0) 60%)
-    }
-    
-    /* ——— Grid konsisten ——— */
-    .grid-2{ align-items:start }
-    
-    /* ——— Responsif tombol header agar tinggi seragam ——— */
-    .actions .btn,.actions .menu-toggle{ height:44px; display:inline-flex; align-items:center }
-    @media (min-width:1200px){ .actions .btn,.actions .menu-toggle{ height:48px } }
   </style>
 </head>
 <body>
@@ -496,6 +464,7 @@
   
 </body>
 </html>
+
 
 
 
