@@ -241,7 +241,8 @@
 # Jalankan Edge Function untuk semua *.txt (termasuk key IndexNow)
 [[edge_functions]]
 function = "indexnow-key"
-path = "/:file.txt"
+path = "/:key.txt"
+
 
 
 
