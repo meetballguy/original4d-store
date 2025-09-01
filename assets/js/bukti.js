@@ -32,7 +32,7 @@
   try {
     const [sx, fj] = await Promise.allSettled([
       fetch('/sitemap.xml', { cache: 'no-store' }),
-      fetch('/blog/feed.json', { cache: 'no-store' })
+      fetch('/bukti/feed.json', { cache: 'no-store' })
     ]);
     if (sx.status === 'fulfilled') sitemapXML = await sx.value.text();
     if (fj.status === 'fulfilled' && fj.value.ok) feedJSON = await fj.value.json();
