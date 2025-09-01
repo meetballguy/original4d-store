@@ -1,7 +1,7 @@
 # ===== Build: generate posts -> wins -> inject partials -> feeds -> sitemap =====
 [build]
   publish = "."
-  command = "node scripts/write-indexnow-key.mjs && node scripts/build-posts.mjs && node scripts/build-wins.mjs && node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
+  command = "node scripts/build-posts.mjs && node scripts/build-wins.mjs && node scripts/inject-partials.mjs && node scripts/generate-feed.mjs && node scripts/generate-sitemap.mjs"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -241,6 +241,7 @@
 [[edge_functions]]
   path = "/:key.txt"
   function = "indexnow-key"
+
 
 
 
