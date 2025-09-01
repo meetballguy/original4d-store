@@ -124,12 +124,32 @@ function articleTemplate({
   <title>${safeTitle}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="${safeDesc}">
-  <meta name="robots" content="index,follow">
   <link rel="canonical" href="${canonical}">
-
+  <meta name="robots" content="index,follow">
+  <meta name="copyright" content="Original4D" />
+  <meta name="author" content="Original4D" />
+  <meta name="distribution" content="global" />
+  <meta name="publisher" content="Original4D" />
+  <meta name="geo.country" content="ID" />
+  <meta name="tgn.nation" content="Indonesia" />
+  <meta name="googlebot" content="index,follow" />
+  <meta name="Googlebot-Image" content="follow, all" />
+  <meta name="Scooter" content="follow, all" />
+  <meta name="msnbot" content="follow, all" />
+  <meta name="alexabot" content="follow, all" />
+  <meta name="Slurp" content="follow, all" />
+  <meta name="ZyBorg" content="follow, all" />
+  <meta name="bingbot" content="follow, all" />
+  <meta name="MSSmartTagsPreventParsing" content="true" />
+  <meta name="audience" content="all" />
+  <meta name="geo.region" content="ID-JK" />
+  <meta name="geo.placename" content="Jakarta Special Capital Region" />
+  
   <!-- Performance: preconnect/preload -->
   <link rel="preload" href="/assets/css/blog.css" as="style">
-
+  <link rel="alternate" type="application/json" href="/blog/feed.json">
+  <link rel="alternate" type="application/rss+xml" href="/blog/feed.xml">
+  
   <!-- Open Graph -->
   <meta property="og:locale" content="id_ID">
   <meta property="og:type" content="article">
