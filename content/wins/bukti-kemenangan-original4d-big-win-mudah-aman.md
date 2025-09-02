@@ -15,7 +15,7 @@ slug: "bukti-kemenangan-original4d-big-win-mudah-aman"
 
 Bermain togel online kini semakin diminati di Indonesia, dan Original4D telah menjadi salah satu situs terpercaya yang memberikan pengalaman bermain terbaik sekaligus bukti kemenangan nyata bagi para penggunanya. Dalam artikel ini, kami akan membahas bukti-bukti kemenangan para pemain Original4D yang telah merasakan sensasi big win dengan cara yang aman dan transparan.
 
-![Bukti Kemenangan Big Win Original4D]
+![Bukti Kemenangan Big Win Original4D](/assets/img/koi-original4d.jpg)
 
 ---
 
