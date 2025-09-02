@@ -1,8 +1,10 @@
 ---
 title: "Original4D Indonesia: Situs Togel Online Terpercaya dan Terpopuler"
-description: "Temukan ulasan lengkap tentang Original4D Indonesia, situs togel online terpercaya dengan layanan cepat dan aman. Baca review lengkapnya sekarang!"
-date: 2025-09-03T05:15:00.000+07:00
-updated: 2025-09-03T05:15:00.000+07:00
+description: Temukan ulasan lengkap tentang Original4D Indonesia, situs togel
+  online terpercaya dengan layanan cepat dan aman. Baca review lengkapnya
+  sekarang!
+date: 2025-09-03T05:13:00.000+07:00
+updated: 2025-09-03T05:13:00.000+07:00
 draft: false
 slug: original4d-indonesia-situs-togel-online-terpercaya-dan-terpopuler
 ---
