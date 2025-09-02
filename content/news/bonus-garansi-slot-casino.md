@@ -1,8 +1,7 @@
 ---
 title: BONUS GARANSI 50% SLOT & CASINO — Modal Kecil, Balik Modal Bukan Mimpi!
-description: Raih kembali hingga 50% dari kekalahan Anda! Promo garansi
-  kekalahan untuk Slot & Casino hanya di Original4D. Tanpa ribet, klaim mudah,
-  dan bisa untung lebih besar!
+description: Raih kembali hingga 50% dari kekalahan Anda! Promo garansi kekalahan untuk Slot & Casino hanya di Original4D. Tanpa ribet, klaim mudah, dan bisa untung lebih besar!
+proof_image: /assets/img/bonus-kalah-50%.png
 date: 2025-09-02T20:54:00.000+07:00
 updated: 2025-09-02T20:54:00.000+07:00
 draft: false
