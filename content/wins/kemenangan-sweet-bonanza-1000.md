@@ -1,6 +1,6 @@
 ---
 title: Menang Maksimal, Depo Minimal di Sweet Bonanza 1000 Original4D!
-date: 2025-09-03T05:13:00.000+07:00
+date: 2025-09-03T06:04:00.000+07:00
 amount: 13000000
 member_mask: SL*0*40
 game: Slot — Sweet Bonanza 1000
