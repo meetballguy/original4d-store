@@ -17,14 +17,36 @@ const WINS_OUT_DIR = path.join(ROOT, "bukti");
 // lokasi FEED
 const BLOG_FEED_DIR  = path.join(ROOT, "blog");   // /blog/feed.*
 const WINS_FEED_DIR  = path.join(ROOT, "bukti");  // /bukti/feed.*
-const ROOT_FEED_DIR  = ROOT;                       // /feed.*  (opsional combined)
+const ROOT_FEED_DIR  = ROOT;                      // /feed.*  (opsional combined)
 
 // ===== helpers =====
-const toISO = (d) => {
+const DEFAULT_TZ_OFFSET = "+07:00"; // Asia/Phnom_Penh (GMT+7)
+
+function keepOffsetRFC3339(d) {
+  // Pertahankan offset bila sudah ada; kalau tidak ada, tambahkan +07:00
   if (!d) return null;
+  if (typeof d === "string") {
+    // Sudah ada Z atau offset
+    if (/([zZ]|[+\-]\d{2}:\d{2})$/.test(d)) return d;
+    // Hanya tanggal
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return `${d}T00:00:00${DEFAULT_TZ_OFFSET}`;
+    // Datetime tanpa detik
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(d)) return `${d}:00${DEFAULT_TZ_OFFSET}`;
+    // Datetime dengan detik tanpa offset
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(d)) return `${d}${DEFAULT_TZ_OFFSET}`;
+  }
   const t = new Date(d);
-  return isNaN(t) ? null : t.toISOString();
-};
+  if (isNaN(t)) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  const yyyy = t.getFullYear();
+  const mm = pad(t.getMonth() + 1);
+  const dd = pad(t.getDate());
+  const HH = pad(t.getHours());
+  const MM = pad(t.getMinutes());
+  const SS = pad(t.getSeconds());
+  return `${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}${DEFAULT_TZ_OFFSET}`;
+}
+
 function toUrlPath(p) { return p.split(path.sep).join("/"); }
 
 async function* walk(dir) {
@@ -50,6 +72,15 @@ async function readFM(mdPath) {
   } catch { return {}; }
 }
 
+function toTimeMs(rfc3339) {
+  if (!rfc3339) return 0;
+  const t = new Date(rfc3339);
+  return isNaN(t) ? 0 : t.getTime();
+}
+
+// Ambil item dari markdown, lalu set dateISO ke waktu TERBARU antara:
+// - front-matter (updated/date, dipertahankan offsetnya)
+// - mtime file markdown
 async function collectFromMd(mdDir, baseUrl) {
   const items = [];
   try { await fs.access(mdDir); } catch { return items; }
@@ -57,37 +88,62 @@ async function collectFromMd(mdDir, baseUrl) {
   for (const f of files) {
     const abs = path.join(mdDir, f);
     const fm = await readFM(abs);
+    const stat = await fs.stat(abs);
     const slug = fm.slug ? slugifyFileName(fm.slug) : slugifyFileName(path.basename(f, ".md"));
+
+    const fmRFC3339 = keepOffsetRFC3339(fm.updated || fm.date);
+    const fmMs = toTimeMs(fmRFC3339);
+    const mdMs = stat.mtimeMs;
+
+    // pilih yang TERBARU antara front-matter vs mtime markdown
+    const chosenMs = Math.max(fmMs, mdMs);
+    // Simpan sebagai RFC3339 dengan offset +07:00 (biar tampak “hari ini” di lokal)
+    const dateISO = new Date(chosenMs).toISOString(); // UTC
+    // untuk JSON Feed nanti kita pakai versi offset lokal:
+    const dateLocalRFC3339 = keepOffsetRFC3339(new Date(chosenMs));
+
     items.push({
       title: fm.title || "Tanpa Judul",
       description: fm.description || "",
       url: `${SITE_URL}${baseUrl}${slug}/`,
-      dateISO: toISO(fm.updated || fm.date) || null
+      // Simpan keduanya agar fleksibel di tahap build feed
+      dateUTC: dateISO,                // untuk RSS (pubDate UTC)
+      dateLocalRFC3339                 // untuk JSON Feed agar tidak “kemarin”
     });
   }
   return items;
 }
 
-async function addMtimeFallback(items, outDir, baseUrl) {
+// Lengkapi/upgrade tanggal memakai mtime HTML output bila LEBIH BARU
+async function addMtimeFallback(items, outDir) {
   try { await fs.access(outDir); } catch { return items; }
   const map = new Map(items.map(i => [i.url, i]));
   for await (const f of walk(outDir)) {
     if (path.basename(f) !== "index.html") continue;
-    // contoh: /blog/news/slug/index.html -> /blog/news/slug/
-    const rel = toUrlPath(path.relative(ROOT, f))
-      .replace(/\/index\.html$/, "/");
+    const rel = toUrlPath(path.relative(ROOT, f)).replace(/\/index\.html$/, "/");
     const url = `${SITE_URL}/${rel}`.replace(/\/\/+/g, "/").replace(":/", "://");
     const stat = await fs.stat(f);
+    const mtimeMs = stat.mtimeMs;
+
     if (!map.has(url)) {
+      // Item tanpa markdown: buat baru dari mtime HTML
       map.set(url, {
         title: "Untitled",
         description: "",
         url,
-        dateISO: new Date(stat.mtimeMs).toISOString()
+        dateUTC: new Date(mtimeMs).toISOString(),
+        dateLocalRFC3339: keepOffsetRFC3339(new Date(mtimeMs))
       });
     } else {
       const it = map.get(url);
-      it.dateISO = it.dateISO || new Date(stat.mtimeMs).toISOString();
+      const curMs = Math.max(
+        toTimeMs(it.dateUTC),
+        toTimeMs(it.dateLocalRFC3339)
+      );
+      if (mtimeMs > curMs) {
+        it.dateUTC = new Date(mtimeMs).toISOString();
+        it.dateLocalRFC3339 = keepOffsetRFC3339(new Date(mtimeMs));
+      }
     }
   }
   return Array.from(map.values());
@@ -99,7 +155,7 @@ function buildRss(items, { title, link, desc }) {
       <title><![CDATA[${i.title}]]></title>
       <link>${i.url}</link>
       <guid isPermaLink="true">${i.url}</guid>
-      ${i.dateISO ? `<pubDate>${new Date(i.dateISO).toUTCString()}</pubDate>` : ""}
+      ${i.dateUTC ? `<pubDate>${new Date(i.dateUTC).toUTCString()}</pubDate>` : ""}
       ${i.description ? `<description><![CDATA[${i.description}]]></description>` : ""}
     </item>`).join("\n");
 
@@ -128,7 +184,8 @@ function buildJsonFeed(items, { title, home, feed }) {
       url: i.url,
       title: i.title,
       content_text: i.description || "",
-      date_published: i.dateISO || undefined
+      // pakai RFC3339 dengan offset lokal agar tidak tampil "kemarin"
+      date_published: i.dateLocalRFC3339 || undefined
     }))
   };
 }
@@ -170,24 +227,25 @@ async function writeFeeds(dir, items, kind) {
 
 // ============ main ============
 async function main() {
-  // Kumpulkan dari markdown
+  // Kumpulkan dari markdown (+ pilih tanggal paling baru fm vs mtime .md)
   let blog = await collectFromMd(BLOG_MD_DIR, "/blog/news/");
   let wins = await collectFromMd(WINS_MD_DIR, "/bukti/");
 
-  // Lengkapi fallback tanggal dari output mtime
-  blog = await addMtimeFallback(blog, BLOG_OUT_DIR, "/blog/news/");
-  wins = await addMtimeFallback(wins, WINS_OUT_DIR, "/bukti/");
+  // Upgrade tanggal bila mtime HTML lebih baru
+  blog = await addMtimeFallback(blog, BLOG_OUT_DIR);
+  wins = await addMtimeFallback(wins, WINS_OUT_DIR);
 
-  // Urut desc
-  const sortByDate = (a,b) => (b.dateISO || "").localeCompare(a.dateISO || "");
+  // Urut desc pakai dateUTC (fallback ke local bila perlu)
+  const key = (i) => i.dateUTC || i.dateLocalRFC3339 || "";
+  const sortByDate = (a,b) => key(b).localeCompare(key(a));
   blog.sort(sortByDate);
   wins.sort(sortByDate);
   const combined = [...blog, ...wins].sort(sortByDate);
 
   // Tulis:
-  await writeFeeds(BLOG_FEED_DIR, blog, "blog");        // /blog/feed.*
-  await writeFeeds(WINS_FEED_DIR, wins, "wins");        // /bukti/feed.*
-  await writeFeeds(ROOT_FEED_DIR, combined, "combined"); // /feed.*  (opsional)
+  await writeFeeds(BLOG_FEED_DIR, blog, "blog");         // /blog/feed.*
+  await writeFeeds(WINS_FEED_DIR, wins, "wins");         // /bukti/feed.*
+  await writeFeeds(ROOT_FEED_DIR, combined, "combined"); // /feed.* (opsional)
   console.log(`[feed] blog=${blog.length}, wins=${wins.length}, combined=${combined.length}`);
 }
 
