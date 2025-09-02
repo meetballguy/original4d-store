@@ -1,14 +1,16 @@
 ---
+proof_image: /assets/img/koi-original4d.jpg
+draft: false
+keywords: Original4D, bukti kemenangan, big win togel, situs togel terpercaya,
+  original4d bukti
 title: "Bukti Kemenangan Original4D: Raih Big Win dengan Mudah dan Aman"
-date: 2025-09-03T05:03:00.000+07:00
+date: 2025-09-03T05:13:00.000+07:00
 amount: 1000000000
 member_mask: Admin-Original4D
 game: Artikel — Bukti Kemenangan Original4D
-proof_image: /assets/img/koi-original4d.jpg
-description: "Lihat bukti nyata kemenangan besar di Original4D, situs togel online terpercaya di Indonesia. Simak ulasan dan panduan lengkapnya di sini!"
-keywords: "Original4D, bukti kemenangan, big win togel, situs togel terpercaya, original4d bukti"
-draft: false
-slug: "bukti-kemenangan-original4d-big-win-mudah-aman"
+description: Lihat bukti nyata kemenangan besar di Original4D, situs togel
+  online terpercaya di Indonesia. Simak ulasan dan panduan lengkapnya di sini!
+slug: bukti-kemenangan-original4d-big-win-mudah-aman
 ---
 
 # Bukti Kemenangan Original4D: Raih Big Win dengan Mudah dan Aman
