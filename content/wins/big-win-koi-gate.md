@@ -9,7 +9,7 @@ description: Kemenangan besar member KO*S*52 pada permainan Koi Gate.
 draft: false
 slug: big-win-koi-gate
 ---
-![Ikan Koi Mulai Berulah, Big Win Koi Gate Habanero Original4D!](/assets/img/mega-jp-50-juta.png)
+![Ikan Koi Mulai Berulah, Big Win Koi Gate Habanero Original4D!](/assets/img/koi-original4d.jpg)
 
 **Catatan:** pembayaran selesai dalam ±3 menit setelah proses verifikasi.
 
