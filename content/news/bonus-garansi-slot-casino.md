@@ -7,7 +7,7 @@ updated: 2025-09-02T20:54:00.000+07:00
 draft: false
 slug: bonus-garansi-slot-casino
 ---
-# BONUS GARANSI SLOT & CASINO 50%(/assets/img/bonus-kalah-50%.png)
+![BONUS GARANSI SLOT & CASINO 50%](/assets/img/bonus-kalah-50%.png)
 
 ### Syarat & Ketentuan Bonus Garansi Kekalahan 50% Slot & Casino
 
