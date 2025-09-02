@@ -4,8 +4,7 @@ import path from "path";
 import matter from "gray-matter";
 
 const ROOT = process.cwd();
-const MANIFEST_PATH = path.join(ROOT, ".sitemap-manifest.json"); // simpan state lastmod/changefreq/priority
-const FREEZE_EXISTING = process.env.SITEMAP_FREEZE_EXISTING !== "0"; // default freeze = true
+const MANIFEST_PATH = path.join(ROOT, ".sitemap-manifest.json"); // simpan state changefreq/priority (bukan lastmod)
 const PING_AFTER_BUILD = process.env.CONTEXT === "production" && process.env.SITEMAP_PING === "1";
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || ""; // opsional: jika pakai IndexNow
 
@@ -34,6 +33,25 @@ function getBaseUrl(){
   const ctx = process.env.CONTEXT || "";
   if (ctx === "production" && process.env.URL) return process.env.URL;
   return process.env.DEPLOY_PRIME_URL || process.env.SITE_URL || "https://original4d.store";
+}
+
+// RFC3339 dengan mempertahankan offset jika ada.
+// Jika string tidak punya offset/Z, biarkan seperti apa adanya (Google menerima RFC3339 lengkap).
+function keepRFC3339(d){
+  if (!d) return null;
+  if (typeof d === "string") {
+    // Jika sudah punya Z/offset, langsung pakai
+    if (/([zZ]|[+\-]\d{2}:\d{2})$/.test(d)) return d;
+    // Hanya tanggal → jadikan tengah malam lokal (tanpa memaksa offset)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return `${d}T00:00:00`;
+    // Bentuk datetime tanpa detik → tambahkan :00
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(d)) return `${d}:00`;
+    // Bentuk datetime lengkap tanpa offset → pakai apa adanya
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(d)) return d;
+  }
+  // Jika berupa Date/number → ke ISO Z; (umumnya tidak diperlukan kalau kamu isi via Decap)
+  const t = new Date(d);
+  return isNaN(t) ? null : t.toISOString();
 }
 
 async function walk(dir, list = []){
@@ -65,11 +83,6 @@ async function isNoIndex(htmlPath){
   }
 }
 
-function isoDate(dt){
-  const d = new Date(dt);
-  return isNaN(d) ? null : d.toISOString().slice(0,10);
-}
-
 async function readFrontMatter(mdAbs){
   try{
     const raw = await fs.readFile(mdAbs, "utf8");
@@ -99,27 +112,13 @@ function matchMdForOutput(absHtmlPath){
   return null;
 }
 
-async function computeCandidateLastmod(absHtmlPath){
-  // Prioritas: FM.updated -> FM.date -> mtime HTML
-  const mdPath = matchMdForOutput(absHtmlPath);
-  if (mdPath){
-    const fm = await readFrontMatter(mdPath);
-    const chosen = fm.updated || fm.date;
-    if (chosen){
-      return isoDate(chosen);
-    }
-  }
-  const stat = await fs.stat(absHtmlPath);
-  return isoDate(stat.mtime);
-}
-
 // === Canonical extractor ===
 function normalizeUrl(href, baseUrl){
   try {
     const u = new URL(href, baseUrl);
     if (u.pathname === "") u.pathname = "/";
     u.hash = ""; // jangan include fragment di sitemap
-    // Penting: jangan paksa trailing slash—hormati canonical persis seperti di HTML
+    // Jangan paksa trailing slash—ikuti canonical
     return u.toString();
   } catch {
     return null;
@@ -156,48 +155,37 @@ function daysBetween(fromISO, toDate = new Date()){
   return Math.floor((toDate - d) / (1000*60*60*24));
 }
 
-function computeChangefreq(type, lastmodISO){
+function computeChangefreq(type, lastmodRFC3339){
   if (type === "home") return "daily";
   if (type === "section") return "daily";
-  const age = daysBetween(lastmodISO);
+  const age = daysBetween(lastmodRFC3339);
   if (age <= 7) return "daily";
   if (age <= 30) return "weekly";
   if (age <= 180) return "monthly";
   return "yearly";
 }
 
-function computePriority(type, lastmodISO){
+function computePriority(type, lastmodRFC3339){
   if (type === "home") return 1.0;
   if (type === "section") return 0.8;
-  const age = daysBetween(lastmodISO);
+  const age = daysBetween(lastmodRFC3339);
   if (age <= 7) return 0.7;
   if (age <= 30) return 0.6;
   if (age <= 180) return 0.5;
   return 0.3;
 }
 
-async function loadManifest(){
-  try{
-    const raw = await fs.readFile(MANIFEST_PATH, "utf8");
-    return JSON.parse(raw);
-  }catch{
-    return {}; // {loc: {lastmod, changefreq, priority}}
-  }
-}
-
-async function saveManifest(obj){
-  try{
-    await fs.writeFile(MANIFEST_PATH, JSON.stringify(obj, null, 2) + "\n", "utf8");
-  }catch(e){
-    console.warn("Cannot save manifest:", e?.message || e);
-  }
-}
-
 // ========= Main =========
 async function main(){
   const baseUrl = getBaseUrl().replace(/\/+$/,"");
   const files = await walk(ROOT);
-  const prev = await loadManifest();
+
+  // baca manifest lama, tapi hanya untuk changefreq/priority (bukan lastmod)
+  let prev = {};
+  try {
+    const raw = await fs.readFile(MANIFEST_PATH, "utf8");
+    prev = JSON.parse(raw) || {};
+  } catch {}
 
   const map = new Map(); // loc -> {loc,lastmod,changefreq,priority}
 
@@ -213,23 +201,26 @@ async function main(){
     const canonical = await readCanonical(abs, baseUrl + "/");
     if (canonical) loc = canonical;
 
-    // klasifikasi & lastmod kandidat
+    // klasifikasi
     const type = classify(new URL(loc).pathname);
-    const candidateLastmod = await computeCandidateLastmod(abs);
 
-    // tentukan lastmod/changefreq/priority berdasarkan freeze & manifest
-    const prevEntry = prev[loc];
-    let lastmod = candidateLastmod || null;
-
-    if (FREEZE_EXISTING && prevEntry && prevEntry.lastmod) {
-      // beku: hormati nilai lama, jangan berubah
-      lastmod = prevEntry.lastmod;
+    // === lastmod: SELALU dari front-matter .md (Decap) ===
+    // cari pasangan .md; ambil fm.lastmod || fm.updated || fm.date
+    let lastmod = null;
+    const mdPath = matchMdForOutput(abs);
+    if (mdPath){
+      const fm = await readFrontMatter(mdPath);
+      const chosen = fm.lastmod || fm.updated || fm.date;
+      lastmod = keepRFC3339(chosen); // bisa lengkap dengan offset (+07:00) atau Z
     }
+    // Jika tidak ada md atau tidak ada tanggal di front-matter → kosongkan (jangan pakai mtime HTML)
+    // lastmod = null;
 
+    // changefreq & priority: hormati manifest kalau ada; kalau tidak, hitung
+    const prevEntry = prev[loc];
     const changefreq = prevEntry?.changefreq || computeChangefreq(type, lastmod);
     const priority = prevEntry?.priority ?? computePriority(type, lastmod);
 
-    // simpan
     map.set(loc, { loc, lastmod, changefreq, priority });
   }
 
@@ -241,7 +232,7 @@ async function main(){
     return a.loc.localeCompare(b.loc);
   });
 
-  // Tulis sitemap.xml
+  // Tulis sitemap.xml (lastmod boleh berupa tanggal penuh RFC3339)
   const xml =
 `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -273,18 +264,22 @@ ${urls.map(u => `  <url>
   }
   await fs.writeFile(robotsPath, robots, "utf8");
 
-  // Simpan manifest (supaya lastmod lama tidak berubah di build berikutnya)
+  // Simpan manifest (hanya changefreq/priority; lastmod TIDAK dibekukan)
   const manifestObj = {};
   for (const u of urls) {
     manifestObj[u.loc] = {
-      lastmod: u.lastmod || null,
+      lastmod: null, // sengaja tidak menyimpan/mengunci lastmod
       changefreq: u.changefreq,
       priority: u.priority
     };
   }
-  await saveManifest(manifestObj);
+  try {
+    await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifestObj, null, 2) + "\n", "utf8");
+  } catch (e) {
+    console.warn("Cannot save manifest:", e?.message || e);
+  }
 
-  console.log(`Generated sitemap with ${urls.length} URLs → sitemap.xml (freeze=${FREEZE_EXISTING ? "on" : "off"})`);
+  console.log(`Generated sitemap with ${urls.length} URLs → sitemap.xml (lastmod from front-matter only)${PING_AFTER_BUILD ? " + ping" : ""}`);
 
   // ====== Ping search engines (opsional) ======
   if (PING_AFTER_BUILD) {
