@@ -1,7 +1,7 @@
 ---
 title: Mahjong Ways Original4D, Berikan Bukti Bukan Cuma Janji!
-date: 2025-09-02T20:45:00.000+07:00
-amount: 5000000
+date: 2025-09-03T22:10:00.000+07:00
+amount: 1400000
 member_mask: AK*4*KE
 game: Slot — Mahjong Ways(PG Soft)
 proof_image: /assets/img/mahjong-ways-1.png
