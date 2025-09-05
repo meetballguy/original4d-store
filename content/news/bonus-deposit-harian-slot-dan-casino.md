@@ -1,10 +1,8 @@
-
 ---
 title: Bonus Deposit Harian Slot & Casino – Original4D
-description: Dapatkan Bonus Deposit Harian hingga Rp150.000 setiap hari khusus
-  Slot & Casino di Original4D. Syarat mudah, tanpa batasan buyspin, TO 1x saja!
-date: 2025-09-06T00:01:00.000+07:00
-updated: 2025-09-06T00:01:00.000+07:00
+description: Dapatkan Bonus Deposit Harian hingga Rp150.000 setiap hari khusus Slot & Casino di Original4D. Syarat mudah, tanpa batasan buyspin, TO 1x saja!
+date: 2025-09-06T00:14:00.000+07:00
+updated: 2025-09-06T00:14:00.000+07:00
 draft: false
 slug: bonus-deposit-harian-slot-dan-casino
 ---
