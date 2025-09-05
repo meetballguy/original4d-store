@@ -1,6 +1,6 @@
 ---
 title: Jackpot Pragmatic Play, Gates Of Olympus Super Scatter Original4D!
-date: 2025-09-02T20:45:00.000+07:00
+date: 2025-09-05T07:05:00.000+07:00
 amount: 1007500
 member_mask: 5D*2*KA
 game: Slot — Gates Of Olympus Super Scatter
