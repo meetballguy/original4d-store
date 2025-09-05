@@ -1,3 +1,4 @@
+
 ---
 title: Bonus Deposit Harian Slot & Casino – Original4D
 description: Dapatkan Bonus Deposit Harian hingga Rp150.000 setiap hari khusus
@@ -19,14 +20,18 @@ slug: bonus-deposit-harian-slot-dan-casino
 
 ## Rincian Bonus Deposit Harian Berdasarkan Nominal Deposit
 
-| Nominal Deposit        | Bonus          |
-|-------------------------|----------------|
-| Rp25.000 – Rp50.000     | Rp10.000       |
-| Rp50.001 – Rp100.000    | Rp20.000       |
-| Rp100.001 – Rp250.000   | Rp30.000       |
-| Rp250.001 – Rp500.000   | Rp60.000       |
-| Rp500.001 – Rp1.000.000 | Rp100.000      |
-| Rp1.001.000 ke atas     | Rp150.000      |
+<div class="table-responsive">
+
+| Nominal Deposit         | Bonus                         |
+|-------------------------|-------------------------------|
+| Rp25.000 – Rp50.000     | <span class="num">Rp10.000</span>     |
+| Rp50.001 – Rp100.000    | <span class="num">Rp20.000</span>     |
+| Rp100.001 – Rp250.000   | <span class="num">Rp30.000</span>     |
+| Rp250.001 – Rp500.000   | <span class="num">Rp60.000</span>     |
+| Rp500.001 – Rp1.000.000 | <span class="num">Rp100.000</span>    |
+| Rp1.001.000 ke atas     | <span class="num">Rp150.000</span>    |
+
+</div>
 
 Program Bonus Deposit Harian ini merupakan bentuk apresiasi dari Original4D kepada seluruh member setia yang aktif bermain Slot dan Casino setiap hari. Dengan minimal deposit hanya Rp25.000, Anda sudah bisa menikmati bonus tambahan yang bisa digunakan langsung tanpa syarat rumit. Semakin besar deposit Anda, semakin besar pula bonus yang akan diterima—hingga Rp150.000 setiap harinya!
 
