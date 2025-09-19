@@ -99,7 +99,7 @@ slug: verifikasi-akun-original4d
 
 ## Checklist 60-detik
 
-* ✔ Buka **[original4d.store](/)** → klik **Login/Daftar**.  
+* ✔ Buka **[Original4D](https://xn--9kr094hvbd.xyz/)** → klik **Login/Daftar**.  
 * ✔ Pastikan **HTTPS + ikon gembok** di address bar.  
 * ✔ Cek **Spam/Promotions**, **kirim ulang OTP** bila perlu.  
 * ✔ Coba **Incognito** + nonaktifkan pemblokir.  
@@ -117,8 +117,8 @@ slug: verifikasi-akun-original4d
 
 ## Tautan cepat
 
-* **Login:** [baksooriginal4d.com](https://baksooriginal4d.com/login)
-* **Daftar:** [baksooriginal4d.com/register](https://baksooriginal4d.com/register)
+* **Login:** [xn--9kr094hvbd.xyz](https://xn--9kr094hvbd.xyz/login)
+* **Daftar:** [xn--9kr094hvbd.xyz/register](https://xn--9kr094hvbd.xyz/register)
 
 - - -
 
