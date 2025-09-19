@@ -114,7 +114,7 @@ Sekali lagi, **selamat kepada** KO*S*52 atas kemenangan spektakuler di Koi Gate 
 
 Bagi Anda yang ingin merasakan sensasi serupa, jangan ragu untuk bergabung di portal resmi kami:
 
-👉 [Portal Resmi Original4D](https://original4d.store/)  
+👉 [Portal Resmi Original4D](https://xn--9kr094hvbd.xyz/)  
 
 Siapa tahu, Anda adalah pemenang Mega JP berikutnya!
 
