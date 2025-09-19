@@ -48,7 +48,7 @@ Agar lebih mudah ditemukan di Google, halaman-halaman dioptimalkan dengan cara:
 Untuk memperkuat posisi di Google, original4d.store juga menerapkan strategi backlink:
 
 1. **Guest post** di media online Indonesia yang kredibel  
-2. **Digital PR** lewat kerja sama dengan media seperti **Atikelharian.site** atau **revieworiginal4d.blogspot.com**
+2. **Digital PR** lewat kerja sama dengan media seperti **www.original4d-go.sidar.online** atau **revieworiginal4d.blogspot.com**
 3. Membuat konten yang **mudah dibagikan**, seperti infografis atau panduan  
 4. Menggunakan **anchor text yang alami** dan sesuai topik  
 
