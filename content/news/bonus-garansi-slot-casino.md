@@ -75,7 +75,7 @@ Bergabunglah bersama ribuan member yang telah merasakan **keuntungan nyata** dar
 ## Daftar Sekarang dan Nikmati Keuntungannya!
 
 Saatnya Anda mengambil langkah cerdas!\
-🎯 **[Daftar sekarang](https://original4d.store/)** di Original4D\
+🎯 **[Daftar sekarang](https://xn--9kr094hvbd.xyz/)** di Original4D\
 🎯 Klaim bonusnya melalui WhatsApp atau Telegram\
 🎯 Tingkatkan pengalaman bermain Anda!
 
