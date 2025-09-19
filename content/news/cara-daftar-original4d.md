@@ -10,7 +10,7 @@ slug: "cara-daftar-original4d" # opsional; kalau kosong diambil dari nama file
 Ringkasan 1–2 kalimat yang padat dan informatif.
 
 ## Langkah pendaftaran
-1. Klik tombol [Daftar](https://baksooriginal4d.com/register).
+1. Klik tombol [Daftar](https://xn--9kr094hvbd.xyz/register).
 2. Isi data sesuai petunjuk, lakukan verifikasi.
 3. Aktifkan keamanan (PIN/2FA bila tersedia).
 
