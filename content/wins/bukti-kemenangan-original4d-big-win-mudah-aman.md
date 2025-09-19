@@ -37,7 +37,7 @@ Original4D menghadirkan berbagai bukti kemenangan mulai dari jackpot hingga keme
 
 Untuk melihat bukti kemenangan tersebut, Anda bisa mengunjungi halaman berikut:
 
-[original4d.artikelharian.site](https://original4d.artikelharian.site/bukti/)
+[original4d-go.sidar.online](https://www.original4d-go.sidar.online/bukti/)
 
 Di sana, Anda akan menemukan kumpulan bukti kemenangan lengkap dengan tanggal, nominal, dan metode pembayaran yang jelas dan mudah diverifikasi.
 
@@ -76,7 +76,7 @@ Untuk mulai meraih big win dan mendapatkan bukti kemenangan nyata, ikuti langkah
 
 Original4D bukan sekadar situs togel biasa. Dengan bukti kemenangan yang jelas dan sistem terpercaya, platform ini menjadi pilihan utama bagi pemain togel online di Indonesia yang menginginkan pengalaman bermain yang aman dan menguntungkan.
 
-Jangan ragu untuk mengunjungi halaman bukti kemenangan di [original4d.artikelharian.site](https://original4d.artikelharian.site/bukti/) dan buktikan sendiri keunggulan Original4D!
+Jangan ragu untuk mengunjungi halaman bukti kemenangan di [original4d-go.sidar.online](https://www.original4d-go.sidar.online/bukti/) dan buktikan sendiri keunggulan Original4D!
 
 ---
 
