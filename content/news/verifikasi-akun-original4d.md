@@ -10,7 +10,7 @@ slug: verifikasi-akun-original4d
 ---
 **TL;DR (perbaikan cepat)**  
 
-1. Akses dari **portal resmi**: [original4d.store](/) → **Login/Daftar**.  
+1. Akses dari **portal resmi**: [original4d](https://xn--9kr094hvbd.xyz/) → **Login/Daftar**.  
 2. Cek email/nomor **benar**, OTP **tidak kadaluarsa** (≤60 dtk).  
 3. Lihat **Spam/Promotions**, lalu **kirim ulang OTP** bila perlu.  
 4. Matikan sementara **ekstensi pemblokir** & coba **Incognito**.  
