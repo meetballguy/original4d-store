@@ -12,7 +12,7 @@ slug: bonus-deposit-harian-slot-dan-casino
 ## Syarat & Ketentuan :
 
 * Bonus Deposit Harian, Wajib melakukan deposit minimal Rp25.000  
-* Khusus untuk permainan Slot dan Casino **[Original4D](https://xn--9kr094hvbd.xyz/)**  
+* Khusus untuk permainan Slot dan Casino **[Original4D](https://original4dganteng.com/)**  
 * Bebas Buyspin tanpa batasan  
 * Turnover (TO) hanya 1x betting  
 * Bebas IP & Data – tidak ada pembatasan perangkat atau jaringan  
