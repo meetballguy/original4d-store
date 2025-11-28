@@ -99,7 +99,7 @@ slug: login-error-original4d
 
 ## Checklist 30-detik
 
-* ✔ Buka [Original4D](https://xn--9kr094hvbd.xyz/) → klik **Login**.  
+* ✔ Buka [Original4D](https://buahoriginal4d.com/) → klik **Login**.  
 * ✔ Pastikan **HTTPS** + gembok.  
 * ✔ Ketik ulang password, matikan CAPS LOCK.  
 * ✔ Incognito jika masih error.  
@@ -110,8 +110,8 @@ slug: login-error-original4d
 
 ## Tautan cepat
 
-* **Login:** [Original4D](https://xn--9kr094hvbd.xyz/login)
-* **Daftar:** [Original4D](https://xn--9kr094hvbd.xyz/register)
+* **Login:** [Original4D](https://buahoriginal4d.com/)
+* **Daftar:** [Original4D](https://buahoriginal4d.com/register)
 
 - - -
 
