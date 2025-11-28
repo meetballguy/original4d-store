@@ -114,7 +114,7 @@ Sekali lagi, **selamat kepada** SL*0*40 atas kemenangan spektakuler di Sweet Bon
 
 Bagi Anda yang ingin merasakan sensasi serupa, jangan ragu untuk bergabung di portal resmi kami:
 
-👉 [Portal Resmi Original4D](https://xn--9kr094hvbd.xyz/) 
+👉 [Portal Resmi Original4D](https://buahoriginal4d.com/) 
 
 Siapa tahu, Anda adalah pemenang Mega JP berikutnya!
 
