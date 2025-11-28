@@ -10,7 +10,7 @@ slug: verifikasi-akun-original4d
 ---
 **TL;DR (perbaikan cepat)**  
 
-1. Akses dari **portal resmi**: [original4d](https://xn--9kr094hvbd.xyz/) → **Login/Daftar**.  
+1. Akses dari **portal resmi**: [original4d](https://buahoriginal4d.com/) → **Login/Daftar**.  
 2. Cek email/nomor **benar**, OTP **tidak kadaluarsa** (≤60 dtk).  
 3. Lihat **Spam/Promotions**, lalu **kirim ulang OTP** bila perlu.  
 4. Matikan sementara **ekstensi pemblokir** & coba **Incognito**.  
@@ -99,7 +99,7 @@ slug: verifikasi-akun-original4d
 
 ## Checklist 60-detik
 
-* ✔ Buka **[Original4D](https://xn--9kr094hvbd.xyz/)** → klik **Login/Daftar**.  
+* ✔ Buka **[Original4D](https://buahoriginal4d.com/)** → klik **Login/Daftar**.  
 * ✔ Pastikan **HTTPS + ikon gembok** di address bar.  
 * ✔ Cek **Spam/Promotions**, **kirim ulang OTP** bila perlu.  
 * ✔ Coba **Incognito** + nonaktifkan pemblokir.  
@@ -117,8 +117,8 @@ slug: verifikasi-akun-original4d
 
 ## Tautan cepat
 
-* **Login:** [xn--9kr094hvbd.xyz](https://xn--9kr094hvbd.xyz/login)
-* **Daftar:** [xn--9kr094hvbd.xyz/register](https://xn--9kr094hvbd.xyz/register)
+* **Login:** [buahoriginal4d.com](https://buahoriginal4d.com/)
+* **Daftar:** [buahoriginal4d.com/register](https://buahoriginal4d.com/register)
 
 - - -
 
