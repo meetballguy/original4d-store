@@ -34,9 +34,7 @@ Original4D menghadirkan berbagai bukti kemenangan mulai dari jackpot hingga keme
 
 ## Cara Mengakses Bukti Kemenangan Original4D
 
-Untuk melihat bukti kemenangan tersebut, Anda bisa mengunjungi halaman berikut:
-
-[original4d-go.sidar.online](https://www.original4d-go.sidar.online/bukti/)
+Untuk melihat bukti kemenangan tersebut, Anda bisa mengunjungi halaman berikut: [www.original4d-go.sidar.online](https://www.original4d-go.sidar.online/bukti/)
 
 Di sana, Anda akan menemukan kumpulan bukti kemenangan lengkap dengan tanggal, nominal, dan metode pembayaran yang jelas dan mudah diverifikasi.
 
@@ -63,7 +61,7 @@ Banyak pemain yang sudah membuktikan sendiri keandalan Original4D. Berikut salah
 
 Untuk mulai meraih big win dan mendapatkan bukti kemenangan nyata, ikuti langkah mudah berikut:
 
-1. Kunjungi situs resmi Original4D di [sini](https://xn--9kr094hvbd.xyz/)
+1. [Kunjungi situs resmi Original4D di sini](https://buahoriginal4d.com/)
 2. Daftar akun baru dengan data valid.
 3. Lakukan deposit awal dengan metode yang disediakan.
 4. Pilih jenis togel yang Anda suka dan pasang taruhan.
